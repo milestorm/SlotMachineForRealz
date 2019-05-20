@@ -138,6 +138,9 @@ void Reel::spin(int targetValue) {
 
 }
 
+/*
+Sets lights array
+*/
 void Reel::setLights(int *bulbArray) {
     bulb1.setStatus(bulbArray[0]);
     bulb2.setStatus(bulbArray[1]);
