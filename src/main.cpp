@@ -8,7 +8,7 @@
 #include "tools.h"
 
 
-OneButton startButton(5, true); 
+OneButton startButton(5, true);
 
 
 
@@ -19,18 +19,18 @@ int reelLength = 24;
 
 //bool textWritten = false;
 
-const byte sensorPin = 2;
+const byte sensorPin = 2; // please define this pin in config.h
 
 
 AccelStepper stepper(AccelStepper::FULL4WIRE, 8, 9, 10, 11);
-Reel reel1(1, stepper, sensorPin, reelSymbols2, reelLength);
+Reel reel1(1, stepper, reelSymbols2, reelLength, sensorPin);
 
 
 
 
 /********************
   VFD display Pin config:
-  
+
   SCLK = pin 3
   RST  = pin 2
   DATA = pin 4
@@ -66,12 +66,12 @@ void reelWatcher() {
         Serial.println(getSymbolsIndex(stepper.currentPosition()) );
         textWritten = true;
       }
-      
+
     } else {
       textWritten = false;
     }
   }
-  
+
 }
 */
 
@@ -82,7 +82,7 @@ void setup()
     Serial.begin(9600);
     Serial.println("Booting up...");
   }
-  
+
   reel1.init();
 
   startButton.attachClick(startButtonFn);

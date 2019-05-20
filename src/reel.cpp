@@ -5,10 +5,10 @@ Class initialization
 @param reelIndex {int} Index of position in the slot machine
 @param stepper {AccelStepper} Motor
 @param sensorPin {int} Optical sensor pin
-@param *reelSymbols {int} Array of reel values 
+@param *reelSymbols {int} Array of reel values
 @param reelSymbolsLength {int} Length of reel array
 */
-Reel::Reel(int reelIndex, AccelStepper &stepper, int sensorPin, int *reelSymbols, int reelSymbolsLength) {
+Reel::Reel(int reelIndex, AccelStepper &stepper, int *reelSymbols, int reelSymbolsLength, int sensorPin) {
     this->reelIndex = reelIndex;
     this->stepper = stepper;
     this->sensorPin = sensorPin;
@@ -29,7 +29,7 @@ void Reel::init() {
 /*
 Calibrates reel with slow speed
 */
-void Reel::calibrateReel() {    
+void Reel::calibrateReel() {
     stepper.setMaxSpeed(20);
     stepper.move(NUM_STEPS);
     while(!digitalRead(sensorPin)) {
@@ -74,7 +74,7 @@ int* Reel::getReelWinSymbols(long currentIndex) {
     } else {
         reelWinSymbols[0] = reelSymbols[currentIndex + 1];
     }
-  
+
     // 2nd
     reelWinSymbols[1] = reelSymbols[currentIndex];
 
@@ -94,7 +94,7 @@ Kind of hindsight of symbols which will be on reels after the spin
 */
 int* Reel::getSymbolsAfterSpin(int targetValue) {
     int *symbArray = getReelWinSymbols(getSymbolsIndex(stepper.currentPosition() + (targetValue * STEPS_PER_VALUE)) );
-    
+
     if (DEBUG) {
         Serial.print("Symbols will be: ");
         Serial.print(symbArray[0]);
@@ -119,5 +119,5 @@ void Reel::spin(int targetValue) {
         Serial.print(". reel is going to: ");
         Serial.println(targetValue);
     }
-  
+
 }
