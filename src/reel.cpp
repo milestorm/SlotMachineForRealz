@@ -1,29 +1,42 @@
 #include "reel.h"
+#include "flasher.h"
 
 /*
-Class initialization
+Class initialization with motor, calibration sensor and light bulbs
 @param reelIndex {int} Index of position in the slot machine
 @param stepper {AccelStepper} Motor
-@param sensorPin {int} Optical sensor pin
 @param *reelSymbols {int} Array of reel values
 @param reelSymbolsLength {int} Length of reel array
+@param sensorPin {int} Optical sensor pin
+@param bulb1 {Flasher} Light bulb 1
+@param bulb2 {Flasher} Light bulb 2
+@param bulb3 {Flasher} Light bulb 3
 */
-Reel::Reel(int reelIndex, AccelStepper &stepper, int *reelSymbols, int reelSymbolsLength, int sensorPin) {
+Reel::Reel(int reelIndex, AccelStepper &stepper, int *reelSymbols, int reelSymbolsLength, int sensorPin, Flasher &bulb1, Flasher &bulb2, Flasher &bulb3) {
     this->reelIndex = reelIndex;
     this->stepper = stepper;
     this->sensorPin = sensorPin;
     this->reelSymbols = reelSymbols;
     this->reelSymbolsLength = reelSymbolsLength;
+    this->bulb1 = bulb1;
+    this->bulb2 = bulb2;
+    this->bulb3 = bulb3;
 }
 
 /*
 Initializes reel. Also calibrates reel to zero position by optical sensor on reel.
 */
 void Reel::init() {
+    // sets pins
     pinMode(sensorPin, INPUT);
+
+    // sets and calibrates stepper
     stepper.setMaxSpeed(speed);
     stepper.setAcceleration(acceleration);
     calibrateReel();
+
+    // turns off lights
+    setLights(lightsStatus);
 }
 
 /*
@@ -44,6 +57,9 @@ void Reel::calibrateReel() {
 Reel watcher. Must be in loop function.
 */
 bool Reel::tick() {
+    bulb1.tick();
+    bulb2.tick();
+    bulb3.tick();
     return stepper.run();
 }
 
@@ -120,4 +136,10 @@ void Reel::spin(int targetValue) {
         Serial.println(targetValue);
     }
 
+}
+
+void Reel::setLights(int *bulbArray) {
+    bulb1.setStatus(bulbArray[0]);
+    bulb2.setStatus(bulbArray[1]);
+    bulb3.setStatus(bulbArray[2]);
 }

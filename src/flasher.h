@@ -11,13 +11,14 @@
 class Flasher {
     public:
         Flasher(int ledPin, long OnTime, long OffTime);
-
+        Flasher() {};
         void tick();
         void flashingOn();
         void permanentOn();
         void off();
         bool isFlashing();
         bool isPermanentOn();
+        void setStatus(int statusIndex);
 
     private:
         int ledPin; // the number of the LED pin

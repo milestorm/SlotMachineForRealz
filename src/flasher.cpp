@@ -78,3 +78,25 @@ Is led permanently on?
 bool Flasher::isPermanentOn() {
     return isOn;
 }
+
+/*
+Sets the light by status
+0: off
+1: permanent on
+2: flash
+*/
+void Flasher::setStatus(int statusIndex) {
+    switch (statusIndex) {
+        case 0 :
+            off();
+            break;
+        case 1 :
+            permanentOn();
+            break;
+        case 2 :
+            flashingOn();
+            break;
+        default :
+            off();
+    }
+}

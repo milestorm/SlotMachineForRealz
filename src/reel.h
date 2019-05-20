@@ -17,25 +17,29 @@ Reel of a slot machine. It contains motor, calibration sensor and three lights
 */
 class Reel {
     public:
-        Reel(int reelIndex, AccelStepper &stepper, int *reelSymbols, int reelSymbolsLength, int sensorPin); // poslat tam jeste classu na ovladani svetel
+        Reel(int reelIndex, AccelStepper &stepper, int *reelSymbols, int reelSymbolsLength, int sensorPin, Flasher &bulb1, Flasher &bulb2, Flasher &bulb3);
 
         bool tick();
         void init();
         void spin(int targetValue);
         bool isRunning();
         int* getSymbolsAfterSpin(int targetValue);
-        int reelWinSymbols[3] = {0,0,0};
+        void setLights(int *bulbArray);
 
     private:
-        AccelStepper stepper;
         void calibrateReel();
         int getSymbolsIndex(long currentPos);
         int* getReelWinSymbols(long currentIndex);
 
+        AccelStepper stepper;
         int sensorPin;
+        int bulbPin1, bulbPin2, bulbPin3;
         int reelIndex;
         int *reelSymbols;
         int reelSymbolsLength;
+        Flasher bulb1, bulb2, bulb3;
+        int lightsStatus[3] = {0, 0, 0}; // possible values: 0 - off, 1 - permanent on, 2 - flash
+        int reelWinSymbols[3] = {0, 0, 0};
 
         int speed = 120;
         int acceleration = 300;

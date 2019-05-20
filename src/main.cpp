@@ -23,7 +23,10 @@ const byte sensorPin = 2; // please define this pin in config.h
 
 
 AccelStepper stepper(AccelStepper::FULL4WIRE, 8, 9, 10, 11);
-Reel reel1(1, stepper, reelSymbols2, reelLength, sensorPin);
+Flasher reel1_bulb1(3, 300, 300);
+Flasher reel1_bulb2(4, 300, 300);
+Flasher reel1_bulb3(5, 300, 300);
+Reel reel1(1, stepper, reelSymbols2, reelLength, sensorPin, reel1_bulb1, reel1_bulb2, reel1_bulb3);
 
 
 
