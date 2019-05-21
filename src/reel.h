@@ -5,6 +5,7 @@
 #include <Arduino.h>
 #include <AccelStepper.h>
 #include "flasher.h"
+#include <avdweb_VirtualDelay.h>
 
 
 #define NUM_STEPS 48

@@ -1,5 +1,4 @@
 #include "reel.h"
-#include "flasher.h"
 
 /*
 Class initialization with motor, calibration sensor and light bulbs
