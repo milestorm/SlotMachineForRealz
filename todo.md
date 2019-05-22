@@ -25,3 +25,4 @@
 - [ ] Classa pro ovladani ciselnych LED panelu
     - [ ] efekt na pricitani/odecitani cisel. Jakoze vyhrajes 100, tak z 50 ti to po jednotkach rychle napocita do 150.
 
+- [ ] Udelat lepsi tocici algoritmus, kterej by zohlednoval ovlivnovani nahody ve prospech kasina v urcitym procentu.
