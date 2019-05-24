@@ -12,6 +12,8 @@
 #define STEPS_PER_VALUE 2
 #define CALIBRATION_CONSTANT 2
 
+#define LIGHT_EFFECT_ON true
+
 
 /*
 Reel of a slot machine. It contains motor, calibration sensor and three lights
@@ -31,10 +33,14 @@ class Reel {
         void calibrateReel();
         int getSymbolsIndex(long currentPos);
         int* getReelWinSymbols(long currentIndex);
+        void spinningLightEffect();
 
+        VirtualDelay lightEffectDelay;
         AccelStepper stepper;
         int sensorPin;
         int bulbPin1, bulbPin2, bulbPin3;
+        int lightEffectPosition = 0;
+        int effectWaterfall[4][3] = { {1,0,0}, {0,1,0}, {0,0,1}, {0,0,0} };
         int reelIndex;
         int *reelSymbols;
         int reelSymbolsLength;

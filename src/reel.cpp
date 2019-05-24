@@ -59,6 +59,9 @@ bool Reel::tick() {
     bulb1.tick();
     bulb2.tick();
     bulb3.tick();
+    if (LIGHT_EFFECT_ON && isRunning()) {
+        spinningLightEffect();
+    }
     return stepper.run();
 }
 
@@ -144,4 +147,39 @@ void Reel::setLights(int *bulbArray) {
     bulb1.setStatus(bulbArray[0]);
     bulb2.setStatus(bulbArray[1]);
     bulb3.setStatus(bulbArray[2]);
+}
+
+/*
+Does the waterfall effect with the lights. Used while reels are spinning.
+NOTE TO SELF: Don't forget to reset the lights after it stops spinning. Do this in the main Slot machine.
+*/
+void Reel::spinningLightEffect() {
+    lightEffectDelay.start(200);
+    if (lightEffectDelay.elapsed()) {
+        switch (lightEffectPosition) {
+        case 0:
+            setLights(effectWaterfall[0]);
+            break;
+
+        case 1:
+            setLights(effectWaterfall[1]);
+            break;
+
+        case 2:
+            setLights(effectWaterfall[2]);
+            break;
+
+        case 3:
+            setLights(effectWaterfall[3]);
+            break;
+
+        default:
+            break;
+        }
+        // resets the light cycle
+        lightEffectPosition++;
+        if (lightEffectPosition > 3) {
+            lightEffectPosition = 0;
+        }
+    }
 }
