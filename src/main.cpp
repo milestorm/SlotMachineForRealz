@@ -5,6 +5,7 @@
 #include <AccelStepper.h>
 
 #include "reel.h"
+#include "vfdcontrol.h"
 #include "tools.h"
 
 
@@ -28,18 +29,8 @@ Flasher reel1_bulb2(6, 400, 300);
 Flasher reel1_bulb3(7, 400, 300);
 Reel reel1(1, stepper, reelSymbols2, reelLength, sensorPin, reel1_bulb1, reel1_bulb2, reel1_bulb3);
 
-
-
-
-/********************
-  VFD display Pin config:
-
-  SCLK = pin 3
-  RST  = pin 2
-  DATA = pin 4
-*********************/
-//Samsung_16LF01_VFD vfd(3, 4, 2);
-
+Samsung_16LF01_VFD vfdisplay(VFD_SCLK_PIN, VFD_DATA_PIN, VFD_RST_PIN);
+Vfdcontrol vfd(vfdisplay);
 
 
 
@@ -86,20 +77,19 @@ void setup()
     Serial.println("Booting up...");
   }
 
+  vfd.init();
+
   reel1.init();
 
   startButton.attachClick(startButtonFn);
 
-  // Init the display, 16 digits and 5/31 of brightness
-  //vfd.begin(16, 20);
-  //vfd.print("hello world");
-  //delay(3000);
-  //vfd.clear();
 }
 
 void loop()
 {
   startButton.tick();
+
+  vfd.tick();
 
   reel1.tick();
   //reelWatcher();
