@@ -38,6 +38,7 @@
 class Samsung_16LF01_VFD : public Print {
 public:
   Samsung_16LF01_VFD(uint8_t _SCLK, uint8_t _DATA, uint8_t _RST);
+  Samsung_16LF01_VFD() {};
 
   void begin(uint8_t digits_count, uint8_t brightness);
   
