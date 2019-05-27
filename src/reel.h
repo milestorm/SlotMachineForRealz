@@ -41,11 +41,14 @@ class Reel {
         int bulbPin1, bulbPin2, bulbPin3;
         int lightEffectPosition = 0;
         int effectWaterfall[4][3] = { {1,0,0}, {0,1,0}, {0,0,1}, {0,0,0} };
+        bool allLightsOn = true;
         int reelIndex;
         int *reelSymbols;
         int reelSymbolsLength;
         Flasher bulb1, bulb2, bulb3;
-        int lightsStatus[3] = {0, 0, 0}; // possible values: 0 - off, 1 - permanent on, 2 - flash
+        int lightsOn[3] = {1, 1, 1};
+        int lightsOff[3] = {0, 0, 0};
+        int lightsStatus[3] = {1, 1, 1}; // possible values: 0 - off, 1 - permanent on, 2 - flash
         int reelWinSymbols[3] = {0, 0, 0};
 
         int speed = 120;
