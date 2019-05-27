@@ -29,8 +29,8 @@ Flasher reel1_bulb2(6, 400, 300);
 Flasher reel1_bulb3(7, 400, 300);
 Reel reel1(1, stepper, reelSymbols2, reelLength, sensorPin, reel1_bulb1, reel1_bulb2, reel1_bulb3);
 
-Samsung_16LF01_VFD vfdisplay(VFD_SCLK_PIN, VFD_DATA_PIN, VFD_RST_PIN);
-Vfdcontrol vfd(vfdisplay);
+//Samsung_16LF01_VFD vfdisplay(VFD_SCLK_PIN, VFD_DATA_PIN, VFD_RST_PIN);
+//Vfdcontrol vfd(vfdisplay);
 
 
 
@@ -53,18 +53,11 @@ void startButtonFn() {
 
 /*
 void reelWatcher() {
-  if (DEBUG) {
     if (!stepper.isRunning()) {
-      if (!textWritten) {
-        Serial.print("LANDED: ");
-        Serial.println(getSymbolsIndex(stepper.currentPosition()) );
-        textWritten = true;
-      }
 
     } else {
-      textWritten = false;
+      
     }
-  }
 
 }
 */
@@ -77,7 +70,7 @@ void setup()
     Serial.println("Booting up...");
   }
 
-  vfd.init();
+  //vfd.init();
 
   reel1.init();
 
@@ -89,7 +82,7 @@ void loop()
 {
   startButton.tick();
 
-  vfd.tick();
+  //vfd.tick();
 
   reel1.tick();
   //reelWatcher();
