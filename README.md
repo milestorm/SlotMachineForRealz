@@ -1,37 +1,38 @@
 # SlotMachineForRealz
 
+
 ## Reel connector
 
 ```
-	 				=======
-	Motor +12V  	 ]----|
-					 X----|
-	Motor A			 ]----|
-	Motor B			 ]----|
-	Motor C			 ]----|
-	Motor D			 ]----|
-					======|
-					 X----|
-	IR sensor +5V	 ]----|
-	IR sensor DAT	 ]----|
-	GND				 ]----|
-	Light 3 GND		 ]----|
-	Light 2 GND		 ]----|
-	Light 1 GND		 ]----|
-	Lights +12V		 ]----|
-					=======
+             =======
+Motor +12V    ]----|
+              X----|
+Motor A       ]----|
+Motor B       ]----|
+Motor C       ]----|
+Motor D       ]----|
+             ======|
+              X----|
+IR sensor +5V ]----|
+IR sensor DAT ]----|
+GND           ]----|
+Light 3 GND   ]----|
+Light 2 GND   ]----|
+Light 1 GND   ]----|
+Lights +12V   ]----|
+             =======
 ```
 
 ## Unipolar stepper motor board connector
 
 ```
-				====
-	Motor A		 ] |
-	Motor B		 ] |=
-	Motor C		 ] |
-	Motor D		 ] |=
-	Motor +12V	 ] |
-				====
+            ====
+Motor A     ] |
+Motor B     ] |=
+Motor C     ] |
+Motor D     ] |=
+Motor +12V  ] |
+            ====
 ```
 
 ## Table of winnings
