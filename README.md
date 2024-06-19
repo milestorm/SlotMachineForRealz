@@ -1,5 +1,7 @@
 # SlotMachineForRealz
 
+Based on real fruit machine Wings from JPM
+(with original reels, displays and buttons)
 
 ## Reel connector
 
