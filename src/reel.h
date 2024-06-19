@@ -26,13 +26,13 @@ class Reel {
         void init();
         void spin(int targetValue);
         bool isRunning();
-        int* getSymbolsAfterSpin(int targetValue);
+        uint16_t* getSymbolsAfterSpin(uint16_t targetValue);
         void setLights(int *bulbArray);
 
     private:
         void calibrateReel();
         int getSymbolsIndex(long currentPos);
-        int* getReelWinSymbols(long currentIndex);
+        uint16_t* getReelWinSymbols(long currentIndex);
         void spinningLightEffect();
 
         VirtualDelay lightEffectDelay;
@@ -49,7 +49,7 @@ class Reel {
         int lightsOn[3] = {1, 1, 1};
         int lightsOff[3] = {0, 0, 0};
         int lightsStatus[3] = {1, 1, 1}; // possible values: 0 - off, 1 - permanent on, 2 - flash
-        int reelWinSymbols[3] = {0, 0, 0};
+        uint16_t reelWinSymbols[3] = {0, 0, 0};
 
         int speed = 120;
         int acceleration = 300;

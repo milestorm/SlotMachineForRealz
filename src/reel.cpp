@@ -94,7 +94,7 @@ int Reel::getSymbolsIndex(long currentPos) {
 Sets the reelWinSymbols array the three symbols, which are up and down from currentIndex
 @param currentIndex {long} index of steppers currentPosition increased of the future value
 */
-int* Reel::getReelWinSymbols(long currentIndex) {
+uint16_t* Reel::getReelWinSymbols(long currentIndex) {
     // 1st
     if (currentIndex == (reelSymbolsLength - 1)) {
         reelWinSymbols[0] = reelSymbols[0];
@@ -119,8 +119,8 @@ int* Reel::getReelWinSymbols(long currentIndex) {
 Kind of hindsight of symbols which will be on reels after the spin
 @param targetValue {int} for how many symbols will the reel turn
 */
-int* Reel::getSymbolsAfterSpin(int targetValue) {
-    int *symbArray = getReelWinSymbols(getSymbolsIndex(stepper.currentPosition() + (targetValue * STEPS_PER_VALUE)) );
+uint16_t* Reel::getSymbolsAfterSpin(uint16_t targetValue) {
+    uint16_t *symbArray = getReelWinSymbols(getSymbolsIndex(stepper.currentPosition() + (targetValue * STEPS_PER_VALUE)) );
 
     if (DEBUG) {
         Serial.print("Symbols will be: ");
