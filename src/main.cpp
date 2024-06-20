@@ -1,10 +1,10 @@
-#include "config.h"
 #include <Arduino.h>
 #include <OneButton.h>
 #include <Samsung_16LF01_VFD.h>
 #include <AccelStepper.h>
 #include <Entropy.h>
 
+#include "config.h"
 #include "reel.h"
 #include "vfdcontrol.h"
 #include "tools.h"
@@ -18,8 +18,14 @@ const int WIN_2_0[] = {10, 10, 20, 20, 40, 60, 80, 100, 150};
 const int WIN_5_0[] = {25, 25, 50, 50, 100, 150, 200, 250, 375};
 const int WIN_5_5[] = {25, 25, 50, 50, 100, 200, 300, 400, 750};
 
+//              0       1      2       3     4     5       6      7      8
 // enum Symbol {CHERRY, LEMON, ORANGE, PLUM, BELL, GRAPES, MELON, SEVEN, STAR};
-int reelSymbols2[24] = {8,3,3,3,5,3,2,2,2,1,1,7,1,1,1,6,6,1,0,0,0,0,4,4}; // hvezdicka je prvni, pak smerem k care
+
+// reels are displayed from star as first symbol, and then as they appear in downwards motion of reel
+// hvezdicka je prvni, pak smerem k care, ktera slepuje reel dohromady, takze nahoru
+int reelSymbols1[24] = {8,1,1,1,6,4,4,4,0,0,0,2,2,2,3,3,3,7,1,0,1,0,5,5};
+int reelSymbols2[24] = {8,3,3,3,5,3,2,2,2,1,1,7,1,1,1,6,6,1,0,0,0,0,4,4};
+int reelSymbols3[24] = {8,2,0,0,0,5,5,3,3,3,7,6,1,1,1,0,1,0,0,4,4,2,2,2};
 int reelLength = 24;
 
 

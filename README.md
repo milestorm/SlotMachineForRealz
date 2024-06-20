@@ -18,9 +18,9 @@ Motor D       ]----|
 IR sensor +5V ]----|
 IR sensor DAT ]----|
 GND           ]----|
-Light 3 GND   ]----|
-Light 2 GND   ]----|
 Light 1 GND   ]----|
+Light 2 GND   ]----|
+Light 3 GND   ]----|
 Lights +12V   ]----|
              =======
 ```
