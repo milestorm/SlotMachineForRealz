@@ -22,10 +22,10 @@ const int WIN_5_5[] = {25, 25, 50, 50, 100, 200, 300, 400, 750};
 // enum Symbol {CHERRY, LEMON, ORANGE, PLUM, BELL, GRAPES, MELON, SEVEN, STAR};
 
 // reels are displayed from star as first symbol, and then as they appear in downwards motion of reel
-// hvezdicka je prvni, pak smerem k care, ktera slepuje reel dohromady, takze nahoru
-int reelSymbols1[24] = {8,1,1,1,6,4,4,4,0,0,0,2,2,2,3,3,3,7,1,0,1,0,5,5};
-int reelSymbols2[24] = {8,3,3,3,5,3,2,2,2,1,1,7,1,1,1,6,6,1,0,0,0,0,4,4};
-int reelSymbols3[24] = {8,2,0,0,0,5,5,3,3,3,7,6,1,1,1,0,1,0,0,4,4,2,2,2};
+// Star is first, then towards the glueing line of reel, so upwards
+int reelSymbols1[24] = {8, 1, 1, 1, 6, 4, 4, 4, 0, 0, 0, 2, 2, 2, 3, 3, 3, 7, 1, 0, 1, 0, 5, 5};
+int reelSymbols2[24] = {8, 3, 3, 3, 5, 3, 2, 2, 2, 1, 1, 7, 1, 1, 1, 6, 6, 1, 0, 0, 0, 0, 4, 4};
+int reelSymbols3[24] = {8, 2, 0, 0, 0, 5, 5, 3, 3, 3, 7, 6, 1, 1, 1, 0, 1, 0, 0, 4, 4, 2, 2, 2};
 int reelLength = 24;
 
 const long flashOnTime = 400;
