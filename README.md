@@ -17,7 +17,7 @@ Motor D       ]----|
               X----|
 IR sensor +5V ]----|
 IR sensor DAT ]----|
-GND           ]----|
+IR sensor GND ]----|
 Light 1 GND   ]----|
 Light 2 GND   ]----|
 Light 3 GND   ]----|
