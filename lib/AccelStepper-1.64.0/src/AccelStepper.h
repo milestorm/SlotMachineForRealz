@@ -12,7 +12,7 @@
 /// AccelStepper significantly improves on the standard Arduino Stepper library in several ways:
 /// \li Supports acceleration and deceleration
 /// \li Supports multiple simultaneous steppers, with independent concurrent stepping on each stepper
-/// \li API functions never delay() or block
+/// \li Most API functions never delay() or block (unless otherwise stated)
 /// \li Supports 2, 3 and 4 wire steppers, plus 3 and 4 wire half steppers.
 /// \li Supports alternate stepping functions to enable support of AFMotor (https://github.com/adafruit/Adafruit-Motor-Shield-library)
 /// \li Supports stepper drivers such as the Sparkfun EasyDriver (based on 3967 driver chip)
@@ -23,7 +23,7 @@
 /// The latest version of this documentation can be downloaded from 
 /// http://www.airspayce.com/mikem/arduino/AccelStepper
 /// The version of the package that this documentation refers to can be downloaded 
-/// from http://www.airspayce.com/mikem/arduino/AccelStepper/AccelStepper-1.59.zip
+/// from http://www.airspayce.com/mikem/arduino/AccelStepper/AccelStepper-1.64.zip
 ///
 /// Example Arduino programs are included to show the main modes of use.
 ///
@@ -34,6 +34,10 @@
 /// - http://en.wikipedia.org/wiki/Wikipedia:Reference_desk/How_to_ask_a_software_question
 /// - http://www.catb.org/esr/faqs/smart-questions.html
 /// - http://www.chiark.greenend.org.uk/~shgtatham/bugs.html
+///
+/// Beginners to C++ and stepper motors in general may find this helpful:
+/// - https://hackaday.io/project/183279-accelstepper-the-missing-manual
+/// - https://hackaday.io/project/183713-using-the-arduino-accelstepper-library
 ///
 /// Tested on Arduino Diecimila and Mega with arduino-0018 & arduino-0021 
 /// on OpenSuSE 11.1 and avr-libc-1.6.1-1.15,
@@ -81,16 +85,16 @@
 ///
 /// \par Copyright
 ///
-/// This software is Copyright (C) 2010-2018 Mike McCauley. Use is subject to license
-/// conditions. The main licensing options available are GPL V2 or Commercial:
+/// This software is Copyright (C) 2010-2021 Mike McCauley. Use is subject to license
+/// conditions. The main licensing options available are GPL V3 or Commercial:
 ///
-/// \par Open Source Licensing GPL V2
+/// \par Open Source Licensing GPL V3
 /// This is the appropriate option if you want to share the source code of your
 /// application with everyone you distribute it to, and you also want to give them
 /// the right to share who uses it. If you wish to use this software under Open
 /// Source Licensing, you must contribute all your source code to the open source
-/// community in accordance with the GPL Version 2 when your application is
-/// distributed. See https://www.gnu.org/licenses/gpl-2.0.html
+/// community in accordance with the GPL Version 23 when your application is
+/// distributed. See https://www.gnu.org/licenses/gpl-3.0.html
 /// 
 /// \par Commercial Licensing
 /// This is the appropriate option if you are creating proprietary applications
@@ -244,10 +248,24 @@
 ///                Add initialisation for _enableInverted in constructor.
 /// \version 1.59 2018-08-28
 ///                Update commercial licensing, remove binpress.
+/// \version 1.60 2020-03-07
+///                Release under GPL V3
+/// \version 1.61 2020-04-20
+///                Added yield() call in runToPosition(), so that platforms like esp8266 dont hang/crash
+///                during long runs.
+/// \version 1.62 2022-05-22
+///                Added link to AccelStepper - The Missing Manual.<br>
+///                Fixed a problem when setting the maxSpeed to 1.0 due to incomplete initialisation.
+///                Reported by Olivier Pécheux. <br>
+/// \version 1.63 2022-06-30
+///                Added virtual destructor at the request of Jan.<br>
+/// \version 1.64 2022-10-31
+///                Patch courtesy acwest: Changes to make AccelStepper more subclassable. These changes are
+///                largely oriented to implementing new step-scheduling algorithms.
 ///
-/// \author  Mike McCauley (mikem@airspayce.com) DO NOT CONTACT THE AUTHOR DIRECTLY: USE THE LISTS
-// Copyright (C) 2009-2013 Mike McCauley
-// $Id: AccelStepper.h,v 1.27 2016/08/14 10:26:54 mikem Exp mikem $
+/// \author  Mike McCauley (mikem@airspayce.com) DO NOT CONTACT THE AUTHOR DIRECTLY: USE THE GOOGLE GROUP
+// Copyright (C) 2009-2020 Mike McCauley
+// $Id: AccelStepper.h,v 1.28 2020/04/20 00:15:03 mikem Exp mikem $
 
 #ifndef AccelStepper_h
 #define AccelStepper_h
@@ -262,6 +280,14 @@
 
 // These defs cause trouble on some versions of Arduino
 #undef round
+
+// Use the system yield() whenever possoible, since some platforms require it for housekeeping, especially
+// ESP8266
+#if (defined(ARDUINO) && ARDUINO >= 155) || defined(ESP8266)
+ #define YIELD yield();
+#else
+ #define YIELD
+#endif
 
 /////////////////////////////////////////////////////////////////////
 /// \class AccelStepper AccelStepper.h <AccelStepper.h>
@@ -337,6 +363,8 @@ public:
     /// AccelStepper::DRIVER (1) means a stepper driver (with Step and Direction pins).
     /// If an enable line is also needed, call setEnablePin() after construction.
     /// You may also invert the pins using setPinsInverted().
+    /// Caution: DRIVER implements a blocking delay of minPulseWidth microseconds (default 1us) for each step.
+    /// You can change this with setMinPulseWidth().
     /// AccelStepper::FULL2WIRE (2) means a 2 wire stepper (2 pins required). 
     /// AccelStepper::FULL3WIRE (3) means a 3 wire stepper, such as HDD spindle (3 pins required). 
     /// AccelStepper::FULL4WIRE (4) means a 4 wire stepper (4 pins required). 
@@ -375,13 +403,13 @@ public:
     /// anticlockwise from the 0 position.
     void    moveTo(long absolute); 
 
-    /// Set the target position relative to the current position
+    /// Set the target position relative to the current position.
     /// \param[in] relative The desired position relative to the current position. Negative is
     /// anticlockwise from the current position.
     void    move(long relative);
 
     /// Poll the motor and step it if a step is due, implementing
-    /// accelerations and decelerations to acheive the target position. You must call this as
+    /// accelerations and decelerations to achieve the target position. You must call this as
     /// frequently as possible, but at least once per minimum step time interval,
     /// preferably in your main loop. Note that each call to run() will make at most one step, and then only when a step is due,
     /// based on the current speed and the time since the last step.
@@ -403,7 +431,7 @@ public:
     /// Result in non-linear accelerations and decelerations.
     void    setMaxSpeed(float speed);
 
-    /// returns the maximum speed configured for this stepper
+    /// Returns the maximum speed configured for this stepper
     /// that was previously set by setMaxSpeed();
     /// \return The currently configured maximum speed
     float   maxSpeed();
@@ -414,6 +442,11 @@ public:
     /// root to be calculated. Dont call more ofthen than needed
     void    setAcceleration(float acceleration);
 
+    /// Returns the acceleration/deceleration rate configured for this stepper
+    /// that was previously set by setAcceleration();
+    /// \return The currently configured acceleration/deceleration
+    float   acceleration();
+    
     /// Sets the desired constant speed for use with runSpeed().
     /// \param[in] speed The desired constant speed in steps per
     /// second. Positive is clockwise. Speeds of more than 1000 steps per
@@ -423,7 +456,7 @@ public:
     /// The speed will be limited by the current value of setMaxSpeed()
     void    setSpeed(float speed);
 
-    /// The most recently set speed
+    /// The most recently set speed.
     /// \return the most recent speed in steps per second
     float   speed();
 
@@ -437,7 +470,7 @@ public:
     /// in steps. Positive is clockwise from the 0 position.
     long    targetPosition();
 
-    /// The currently motor position.
+    /// The current motor position.
     /// \return the current motor position
     /// in steps. Positive is clockwise from the 0 position.
     long    currentPosition();  
@@ -451,12 +484,15 @@ public:
     /// happens to be right now.
     void    setCurrentPosition(long position);  
     
-    /// Moves the motor (with acceleration/deceleration) 
+    /// Moves the motor (with acceleration/deceleration)
     /// to the target position and blocks until it is at
     /// position. Dont use this in event loops, since it blocks.
     void    runToPosition();
 
-    /// Runs at the currently selected speed until the target position is reached
+    /// Executes runSpeed() unless the targetPosition is reached.
+    /// This function needs to be called often just like runSpeed() or run().
+    /// Will step the motor if a step is required at the currently selected
+    /// speed unless the target position has been reached.
     /// Does not implement accelerations.
     /// \return true if it stepped
     boolean runSpeedToPosition();
@@ -518,6 +554,8 @@ public:
     /// \return true if the speed is not zero or not at the target position
     bool    isRunning();
 
+    /// Virtual destructor to prevent warnings during delete
+    virtual ~AccelStepper() {};
 protected:
 
     /// \brief Direction indicator
@@ -536,7 +574,8 @@ protected:
     /// \li  after change to acceleration through setAcceleration()
     /// \li  after change to target position (relative or absolute) through
     /// move() or moveTo()
-    void           computeNewSpeed();
+    /// \return the new step interval
+    virtual unsigned long  computeNewSpeed();
 
     /// Low level function to set the motor output pins
     /// bit 0 of the mask corresponds to _pin[0]
@@ -551,6 +590,16 @@ protected:
     /// number of pins defined for the stepper.
     /// \param[in] step The current step phase number (0 to 7)
     virtual void   step(long step);
+    
+    /// Called to execute a clockwise(+) step. Only called when a new step is
+    /// required. This increments the _currentPos and calls step()
+    /// \return the updated current position
+    long   stepForward();
+
+    /// Called to execute a counter-clockwise(-) step. Only called when a new step is
+    /// required. This decrements the _currentPos and calls step()
+    /// \return the updated current position
+    long   stepBackward();
 
     /// Called to execute a step using stepper functions (pins = 0) Only called when a new step is
     /// required. Calls _forward() or _backward() to perform the step
@@ -592,7 +641,7 @@ protected:
     /// \param[in] step The current step phase number (0 to 7)
     virtual void   step6(long step);
 
-    /// Called to execute a step on a 4 pin half-steper motor. Only called when a new step is
+    /// Called to execute a step on a 4 pin half-stepper motor. Only called when a new step is
     /// required. Subclasses may override to implement new stepping
     /// interfaces. The default sets or clears the outputs of pin1, pin2,
     /// pin3, pin4.
@@ -603,6 +652,10 @@ protected:
     /// Protected because some peoples subclasses need it to be so
     boolean _direction; // 1 == CW
     
+    /// The current interval between steps in microseconds.
+    /// 0 means the motor is currently stopped with _speed == 0
+    unsigned long  _stepInterval;
+
 private:
     /// Number of pins on the stepper motor. Permits 2 or 4. 2 pins is a
     /// bipolar, and 4 pins is a unipolar.
@@ -634,10 +687,6 @@ private:
     /// per second per second. Must be > 0
     float          _acceleration;
     float          _sqrt_twoa; // Precomputed sqrt(2*_acceleration)
-
-    /// The current interval between steps in microseconds.
-    /// 0 means the motor is currently stopped with _speed == 0
-    unsigned long  _stepInterval;
 
     /// The last step time in microseconds
     unsigned long  _lastStepTime;

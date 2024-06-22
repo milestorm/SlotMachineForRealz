@@ -99,7 +99,10 @@ int calculateWinAmount(int symbol, int standardBet, int multiwinBet) {
 }
 
 void startButtonFn() {
-	// TODO: kdyz se reel toci, tak nemoznost zmacknout button
+	// kdyz se reel toci, tak nemoznost zmacknout button
+	if (reel1.isRunning() || reel2.isRunning() || reel3.isRunning()) {
+		return;
+	}
 	targetValueReel1 = Entropy.random(96, 160);
 	targetValueReel2 = Entropy.random(2, 72);
 	targetValueReel3 = Entropy.random(2, 48);

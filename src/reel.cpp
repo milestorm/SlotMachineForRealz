@@ -20,6 +20,7 @@ Reel::Reel(int reelIndex, AccelStepper &stepper, int *reelSymbols, int reelSymbo
     this->bulb1 = bulb1;
     this->bulb2 = bulb2;
     this->bulb3 = bulb3;
+    this->previousMillis = 0;
 }
 
 /*
@@ -55,7 +56,7 @@ void Reel::calibrateReel() {
 /*
 Reel watcher. Must be in loop function.
 */
-bool Reel::tick() {
+void Reel::tick() {
     bulb1.tick();
     bulb2.tick();
     bulb3.tick();
@@ -70,8 +71,23 @@ bool Reel::tick() {
             setLights(lightsOn);
         }
     }
-    
-    return stepper.run();
+
+    if (stepper.isRunning()) {
+        stepper.enableOutputs();
+        stepper.run();
+        motorWasRunning = true;
+        previousMillis = millis();
+    } else {
+        unsigned long currentMillis = millis();
+        if (motorWasRunning && currentMillis - previousMillis >= motorStopTime) {
+            previousMillis = currentMillis;  // Remember the time
+            Serial.print(motorWasRunning);
+            stepper.stop();
+            stepper.disableOutputs();
+            motorWasRunning = false;
+        }
+    }
+    // stepper.run();
 }
 
 /*
