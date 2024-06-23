@@ -29,8 +29,8 @@ int reelSymbols1[reelLength] = {8, 1, 1, 1, 6, 4, 4, 4, 0, 0, 0, 2, 2, 2, 3, 3, 
 int reelSymbols2[reelLength] = {8, 3, 3, 3, 5, 3, 2, 2, 2, 1, 1, 7, 1, 1, 1, 6, 6, 1, 0, 0, 0, 0, 4, 4};
 int reelSymbols3[reelLength] = {8, 2, 0, 0, 0, 5, 5, 3, 3, 3, 7, 6, 1, 1, 1, 0, 1, 0, 0, 4, 4, 2, 2, 2};
 
-const long flashOnTime = 400;
-const long flashOffTime = 300;
+const long flashOnTime = 100;
+const long flashOffTime = 100;
 
 // REEL 1
 const int sensorPin1 = REEL_1__IR_SENSOR;
@@ -143,29 +143,74 @@ int calculateWinAmount(int symbol, int standardBet, int multiwinBet) {
     return 0; // Default return if bets are not 2 or 5
 }
 
+void allLEDsOff() {
+    reel1.bulb1.off();
+    reel1.bulb2.off();
+    reel1.bulb3.off();
+    reel2.bulb1.off();
+    reel2.bulb2.off();
+    reel2.bulb3.off();
+    reel3.bulb1.off();
+    reel3.bulb2.off();
+    reel3.bulb3.off();
+}
+
+void allLEDsOn() {
+    reel1.bulb1.permanentOn();
+    reel1.bulb2.permanentOn();
+    reel1.bulb3.permanentOn();
+    reel2.bulb1.permanentOn();
+    reel2.bulb2.permanentOn();
+    reel2.bulb3.permanentOn();
+    reel3.bulb1.permanentOn();
+    reel3.bulb2.permanentOn();
+    reel3.bulb3.permanentOn();
+}
+
+void flashLEDs(int times, int delayTime, Flasher& led1, Flasher& led2, Flasher& led3) {
+    allLEDsOff();
+    for (int i = 0; i < times; i++) {
+        led1.permanentOn();
+        led2.permanentOn();
+        led3.permanentOn();
+        delay(delayTime);
+        led1.off();
+        led2.off();
+        led3.off();
+        delay(delayTime);
+    }
+}
+
 int calculateWinnings(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3, int standardBet, int multiwinBet) {
     int payout = 0;
 
     // Check horizontal lines
     if (symbols1[0] == symbols2[0] && symbols2[0] == symbols3[0]) {
+        flashLEDs(6, 100, reel1.bulb1, reel2.bulb1, reel3.bulb1);
         payout += calculateWinAmount(symbols1[0], standardBet, multiwinBet);
     }
     if (symbols1[1] == symbols2[1] && symbols2[1] == symbols3[1]) {
+        flashLEDs(6, 100, reel1.bulb2, reel2.bulb2, reel3.bulb2);
         payout += calculateWinAmount(symbols1[1], standardBet, multiwinBet);
     }
     if (symbols1[2] == symbols2[2] && symbols2[2] == symbols3[2]) {
+        flashLEDs(6, 100, reel1.bulb3, reel2.bulb3, reel3.bulb3);
         payout += calculateWinAmount(symbols1[2], standardBet, multiwinBet);
     }
 
     // Check diagonal lines
     // upper-left to bottom-right
     if (symbols1[0] == symbols2[1] && symbols2[1] == symbols3[2]) {
+        flashLEDs(6, 100, reel1.bulb1, reel2.bulb2, reel3.bulb3);
         payout += calculateWinAmount(symbols1[0], standardBet, multiwinBet);
     }
     // bottom-left to upper-right
     if (symbols1[2] == symbols2[1] && symbols2[1] == symbols3[0]) {
+        flashLEDs(6, 100, reel1.bulb3, reel2.bulb2, reel3.bulb1);
         payout += calculateWinAmount(symbols1[2], standardBet, multiwinBet);
     }
+
+    allLEDsOn();
 
     return payout;
 }
@@ -356,6 +401,16 @@ void loop() {
 	reel1.tick();
 	reel2.tick();
 	reel3.tick();
+
+    // reel1_light1.tick();
+    // reel1_light2.tick();
+    // reel1_light3.tick();
+    // reel2_light1.tick();
+    // reel2_light2.tick();
+    // reel2_light3.tick();
+    // reel3_light1.tick();
+    // reel3_light2.tick();
+    // reel3_light3.tick();
 
 	// vfd.print(millis() / 1000);
 	// vfd.println(" seconds");

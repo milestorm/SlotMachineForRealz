@@ -9,6 +9,9 @@ Flasher::Flasher(int ledPin, long OnTime, long OffTime) {
 
     ledState = LOW;
     previousMillis = 0;
+
+    flashCounter = false;
+    flashCount = 0;
 }
 
 /*
@@ -16,6 +19,10 @@ Flasher watcher. Must be in loop function.
 */
 void Flasher::tick() {
     if (updateFlshr == true) {
+        if (flashCounter && flashCount == 0) {
+            flashCounter = false;
+            updateFlshr = false;
+        }
         // check to see if it's time to change the state of the LED
         unsigned long currentMillis = millis();
 
@@ -23,6 +30,11 @@ void Flasher::tick() {
             ledState = LOW;  // Turn it off
             previousMillis = currentMillis;  // Remember the time
             digitalWrite(ledPin, ledState);  // Update the actual LED
+
+            if (flashCounter) {
+                Serial.println(flashCount);
+                flashCount--;
+            }
         } else if ((ledState == LOW) && (currentMillis - previousMillis >= OffTime)) {
             ledState = HIGH;  // turn it on
             previousMillis = currentMillis;   // Remember the time
@@ -45,6 +57,21 @@ Starts flashing of the light
 void Flasher::flashingOn() {
     updateFlshr = true;
 }
+
+void Flasher::flashForCount(int flashFor = 5) {
+    updateFlshr = true;
+    flashCounter = true;
+    flashCount = flashFor;
+}
+
+// void Flasher::flashForCountSync(int count = 5) {
+//     for (int i = 0; i < count; i++) {
+//         digitalWrite(ledPin, HIGH);
+//         delay(OnTime);
+//         digitalWrite(ledPin, LOW);
+//         delay(OffTime);
+//     }
+// }
 
 /*
 Sets the light permanently on

@@ -32,6 +32,7 @@ class Reel {
         int findSymbolIndex(int winningSymbol, uint16_t targetMotorValueReel);
         int getFutureSymbolsIndex(uint16_t targetValue);
         int calculateAdditionalStepsForSymbol(int winningSymbol, uint16_t targetMotorValueReel);
+        Flasher bulb1, bulb2, bulb3;
 
     private:
         void calibrateReel();
@@ -51,7 +52,7 @@ class Reel {
         int reelIndex;
         int *reelSymbols;
         int reelSymbolsLength;
-        Flasher bulb1, bulb2, bulb3;
+        // Flasher bulb1, bulb2, bulb3;
         int lightsOn[3] = {1, 1, 1};
         int lightsOff[3] = {0, 0, 0};
         int lightsStatus[3] = {1, 1, 1}; // possible values: 0 - off, 1 - permanent on, 2 - flash

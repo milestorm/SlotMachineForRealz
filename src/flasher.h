@@ -19,6 +19,9 @@ class Flasher {
         bool isFlashing();
         bool isPermanentOn();
         void setStatus(int statusIndex);
+        void flashForCount(int flashFor);
+        // void flashForCountSync(int flashFor);
+        bool flashCounter;
 
     private:
         int ledPin; // the number of the LED pin
@@ -26,6 +29,7 @@ class Flasher {
         unsigned long OffTime; // milliseconds of off-time
         int ledState; // ledState used to set the LED
         unsigned long previousMillis; // will store last time LED was updated
+        int flashCount;
         bool updateFlshr = false; // flashing on/off
         bool isOn = false; // global on/off
 
