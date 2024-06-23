@@ -3,6 +3,7 @@
 #include <Samsung_16LF01_VFD.h>
 #include <AccelStepper.h>
 #include <Entropy.h>
+#include <EEPROM.h>
 
 #include "config.h"
 #include "reel.h"
@@ -23,10 +24,10 @@ const int WIN_5_5[] = {25, 25, 50, 50, 100, 200, 300, 400, 750};
 
 // reels are displayed from star as first symbol, and then as they appear in downwards motion of reel
 // Star is first, then towards the glueing line of reel, so upwards
-int reelSymbols1[24] = {8, 1, 1, 1, 6, 4, 4, 4, 0, 0, 0, 2, 2, 2, 3, 3, 3, 7, 1, 0, 1, 0, 5, 5};
-int reelSymbols2[24] = {8, 3, 3, 3, 5, 3, 2, 2, 2, 1, 1, 7, 1, 1, 1, 6, 6, 1, 0, 0, 0, 0, 4, 4};
-int reelSymbols3[24] = {8, 2, 0, 0, 0, 5, 5, 3, 3, 3, 7, 6, 1, 1, 1, 0, 1, 0, 0, 4, 4, 2, 2, 2};
-int reelLength = 24;
+const int reelLength = 24;
+int reelSymbols1[reelLength] = {8, 1, 1, 1, 6, 4, 4, 4, 0, 0, 0, 2, 2, 2, 3, 3, 3, 7, 1, 0, 1, 0, 5, 5};
+int reelSymbols2[reelLength] = {8, 3, 3, 3, 5, 3, 2, 2, 2, 1, 1, 7, 1, 1, 1, 6, 6, 1, 0, 0, 0, 0, 4, 4};
+int reelSymbols3[reelLength] = {8, 2, 0, 0, 0, 5, 5, 3, 3, 3, 7, 6, 1, 1, 1, 0, 1, 0, 0, 4, 4, 2, 2, 2};
 
 const long flashOnTime = 400;
 const long flashOffTime = 300;
@@ -68,15 +69,59 @@ OneButton startButton(BUTT_START, true);
 
 // HELPERS
 // ---------------------
-uint16_t targetValueReel1;
-uint16_t targetValueReel2;
-uint16_t targetValueReel3;
+uint16_t targetMotorValueReel1;
+uint16_t targetMotorValueReel2;
+uint16_t targetMotorValueReel3;
 
 uint16_t* futureSymbols1;
 uint16_t* futureSymbols2;
 uint16_t* futureSymbols3;
 
 // bool textWritten = false;
+
+int spinCounter = 0;
+const int numSlots = 10; // Number of slots for wear EEPROM leveling
+
+// Balances and wagers
+int balance = 1000;
+int standardBet = 5;
+int multiwinBet = 5;
+
+// totaly ukladat do eepromky kazdejch 10 otoceni, aby byla historie.
+long totalWagered = 0;
+long totalPaidOut = 0;
+float targetRTP = 95.0;
+
+uint8_t calculateChecksum(long totalWagered, long totalPaidOut) {
+    uint8_t checksum = 0;
+    checksum ^= (totalWagered >> 24) & 0xFF;
+    checksum ^= (totalWagered >> 16) & 0xFF;
+    checksum ^= (totalWagered >> 8) & 0xFF;
+    checksum ^= totalWagered & 0xFF;
+    checksum ^= (totalPaidOut >> 24) & 0xFF;
+    checksum ^= (totalPaidOut >> 16) & 0xFF;
+    checksum ^= (totalPaidOut >> 8) & 0xFF;
+    checksum ^= totalPaidOut & 0xFF;
+    return checksum;
+}
+
+void saveToEEPROM(long totalWagered, long totalPaidOut, int slot) {
+    int baseAddress = slot * (2 * sizeof(long) + sizeof(uint8_t));
+    EEPROM.put(baseAddress, totalWagered);   // Save totalWagered
+    EEPROM.put(baseAddress + sizeof(long), totalPaidOut); // Save totalPaidOut
+    uint8_t checksum = calculateChecksum(totalWagered, totalPaidOut);
+    EEPROM.put(baseAddress + 2 * sizeof(long), checksum); // Save checksum
+}
+
+bool loadFromEEPROM(long &totalWagered, long &totalPaidOut, int slot) {
+    int baseAddress = slot * (2 * sizeof(long) + sizeof(uint8_t));
+    EEPROM.get(baseAddress, totalWagered);   // Load totalWagered
+    EEPROM.get(baseAddress + sizeof(long), totalPaidOut); // Load totalPaidOut
+    uint8_t savedChecksum;
+    EEPROM.get(baseAddress + 2 * sizeof(long), savedChecksum); // Load saved checksum
+    uint8_t calculatedChecksum = calculateChecksum(totalWagered, totalPaidOut);
+    return savedChecksum == calculatedChecksum;
+}
 
 /**
  * Calculates winning amount
@@ -98,21 +143,107 @@ int calculateWinAmount(int symbol, int standardBet, int multiwinBet) {
     return 0; // Default return if bets are not 2 or 5
 }
 
+int calculateWinnings(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3, int standardBet, int multiwinBet) {
+    int payout = 0;
+
+    // Check horizontal lines
+    if (symbols1[0] == symbols2[0] && symbols2[0] == symbols3[0]) {
+        payout += calculateWinAmount(symbols1[0], standardBet, multiwinBet);
+    }
+    if (symbols1[1] == symbols2[1] && symbols2[1] == symbols3[1]) {
+        payout += calculateWinAmount(symbols1[1], standardBet, multiwinBet);
+    }
+    if (symbols1[2] == symbols2[2] && symbols2[2] == symbols3[2]) {
+        payout += calculateWinAmount(symbols1[2], standardBet, multiwinBet);
+    }
+
+    // Check diagonal lines
+    // upper-left to bottom-right
+    if (symbols1[0] == symbols2[1] && symbols2[1] == symbols3[2]) {
+        payout += calculateWinAmount(symbols1[0], standardBet, multiwinBet);
+    }
+    // bottom-left to upper-right
+    if (symbols1[2] == symbols2[1] && symbols2[1] == symbols3[0]) {
+        payout += calculateWinAmount(symbols1[2], standardBet, multiwinBet);
+    }
+
+    return payout;
+}
+
+// Function to find the next index containing the winning symbol
+int findNextIndex(int currentIndex, int winningSymbol, int reelSymbols[]) {
+    for (int i = 0; i < reelLength; i++) {
+        int newIndex = (currentIndex + i) % reelLength;
+        if (reelSymbols[newIndex] == winningSymbol) {
+            return newIndex;
+        }
+    }
+    return currentIndex; // If no other index is found, return the current index
+}
+
+int getSymbolsIndex(int currentPos) {
+    return ((currentPos - CALIBRATION_CONSTANT) % NUM_STEPS) / STEPS_PER_VALUE;
+}
+
+void adjustReelsForWin(uint16_t& targetMotorValueReel1, uint16_t& targetMotorValueReel2, uint16_t& targetMotorValueReel3) {
+    float currentRTP = (totalPaidOut * 100.0) / totalWagered;
+    float adjustmentFactor = (targetRTP - currentRTP) / targetRTP;
+
+    int winningSymbol;
+    if (adjustmentFactor > 0.5) {
+        winningSymbol = Entropy.random(6, 8); // High payout symbol (6, 7, 8)
+    } else if (adjustmentFactor > 0.2) {
+        winningSymbol = Entropy.random(3, 5); // Moderate payout symbol (3, 4, 5)
+    } else {
+        winningSymbol = Entropy.random(0, 2); // Low payout symbol (0, 1, 2)
+    }
+	Serial.print("Winning Symbol: ");
+	Serial.println(winningSymbol);
+
+    // Calculate the additional steps needed for each reel
+    int additionalSteps1 = reel1.calculateAdditionalStepsForSymbol(winningSymbol, targetMotorValueReel1);
+    int additionalSteps2 = reel2.calculateAdditionalStepsForSymbol(winningSymbol, targetMotorValueReel2);
+    int additionalSteps3 = reel3.calculateAdditionalStepsForSymbol(winningSymbol, targetMotorValueReel3);
+
+    // Adjust the target motor values
+    targetMotorValueReel1 += additionalSteps1;
+    targetMotorValueReel2 += additionalSteps2;
+    targetMotorValueReel3 += additionalSteps3;
+}
+
 void startButtonFn() {
 	// kdyz se reel toci, tak nemoznost zmacknout button
 	if (reel1.isRunning() || reel2.isRunning() || reel3.isRunning()) {
 		return;
 	}
-	targetValueReel1 = Entropy.random(96, 160);
-	targetValueReel2 = Entropy.random(2, 72);
-	targetValueReel3 = Entropy.random(2, 48);
 
-	targetValueReel2 = targetValueReel1 + targetValueReel2;
-	targetValueReel3 = targetValueReel2 + targetValueReel3;
+	int currentWager = standardBet + multiwinBet;
+    if (balance < currentWager) {
+		// TODO mozna rozdelit standard a multiwin
+        Serial.println("Insufficient Balance!");
+        return;
+    }
 
-	futureSymbols1 = reel1.getSymbolsAfterSpin(targetValueReel1);
-	futureSymbols2 = reel2.getSymbolsAfterSpin(targetValueReel2);
-	futureSymbols3 = reel3.getSymbolsAfterSpin(targetValueReel3);
+	balance -= currentWager;
+    totalWagered += currentWager;
+
+	targetMotorValueReel1 = Entropy.random(96, 160);
+	targetMotorValueReel2 = Entropy.random(2, 72);
+	targetMotorValueReel3 = Entropy.random(2, 48);
+
+	targetMotorValueReel2 = targetMotorValueReel1 + targetMotorValueReel2;
+	targetMotorValueReel3 = targetMotorValueReel2 + targetMotorValueReel3;
+
+	 // Adjust reels for winnable outcomes if needed
+    float currentRTP = (totalPaidOut * 100.0) / totalWagered;
+    if (currentRTP < targetRTP) {
+		Serial.println("* Adjusting reels for winning! *");
+        adjustReelsForWin(targetMotorValueReel1, targetMotorValueReel2, targetMotorValueReel3);
+    }
+
+	futureSymbols1 = reel1.getSymbolsAfterSpin(targetMotorValueReel1);
+	futureSymbols2 = reel2.getSymbolsAfterSpin(targetMotorValueReel2);
+	futureSymbols3 = reel3.getSymbolsAfterSpin(targetMotorValueReel3);
 
 	Serial.println("futureSymbols:");
 	Serial.print(futureSymbols1[0]);
@@ -120,40 +251,86 @@ void startButtonFn() {
 	Serial.print(futureSymbols2[0]);
 	Serial.print(" - ");
 	Serial.println(futureSymbols3[0]);
+
 	Serial.print(futureSymbols1[1]);
 	Serial.print(" - ");
 	Serial.print(futureSymbols2[1]);
 	Serial.print(" - ");
 	Serial.println(futureSymbols3[1]);
+
 	Serial.print(futureSymbols1[2]);
 	Serial.print(" - ");
 	Serial.print(futureSymbols2[2]);
 	Serial.print(" - ");
 	Serial.println(futureSymbols3[2]);
 
-	reel1.spin(targetValueReel1);
-	reel2.spin(targetValueReel2);
-	reel3.spin(targetValueReel3);
+	reel1.spin(targetMotorValueReel1);
+	reel2.spin(targetMotorValueReel2);
+	reel3.spin(targetMotorValueReel3);
 	// return symbols are at reel2.reelWinSymbols
+
+	// Wait for reels to stop
+    while (reel1.isRunning() || reel2.isRunning() || reel3.isRunning()) {
+        reel1.tick();
+        reel2.tick();
+        reel3.tick();
+    }
+
+	// Calculate and pay out winnings
+    int winnings = calculateWinnings(futureSymbols1, futureSymbols2, futureSymbols3, standardBet, multiwinBet);
+    balance += winnings;
+    totalPaidOut += winnings;
+
+    // Display results
+    Serial.print("Balance: ");
+    Serial.println(balance);
+    Serial.print("Winnings: ");
+    Serial.println(winnings);
+    float newRTP = (totalPaidOut * 100.0) / totalWagered;
+    Serial.print("RTP: ");
+    Serial.print(newRTP, 2);
+    Serial.println("%");
+
+    spinCounter++;
+    if (spinCounter >= 10) {
+        int slot = spinCounter % numSlots; // Rotate through slots
+        saveToEEPROM(totalWagered, totalPaidOut, slot);
+        Serial.print("Saved to EEPROM slot ");
+        Serial.println(slot);
+        spinCounter = 0;
+    }
 }
 
-/*
-void reelWatcher() {
-	if (!stepper.isRunning()) {
-
-	} else {
-	  
-	}
-
-}
-*/
-
+// =====================================================================
 
 void setup() {
 	if (DEBUG) {
 		Serial.begin(9600);
 		Serial.println("Booting up...");
 	}
+
+    bool dataLoaded = false;
+    for (int slot = 0; slot < numSlots; slot++) {
+        if (loadFromEEPROM(totalWagered, totalPaidOut, slot)) {
+            Serial.print("Loaded Total Wagered from slot ");
+            Serial.print(slot);
+            Serial.print(": ");
+            Serial.println(totalWagered);
+            Serial.print("Loaded Total Paid Out from slot ");
+            Serial.print(slot);
+            Serial.print(": ");
+            Serial.println(totalPaidOut);
+            dataLoaded = true;
+            break;
+        }
+    }
+
+    if (!dataLoaded) {
+        // Data is invalid, initialize with default values
+        totalWagered = 0;
+        totalPaidOut = 0;
+        Serial.println("EEPROM data invalid in all slots, initializing with default values.");
+    }
 
 	Entropy.initialize();
 
@@ -165,6 +342,10 @@ void setup() {
 
 	startButton.attachClick(startButtonFn);
 
+    if (DEBUG) {
+		Serial.begin(9600);
+		Serial.println("Fruit Machine is ready.");
+	}
 }
 
 void loop() {
@@ -175,7 +356,6 @@ void loop() {
 	reel1.tick();
 	reel2.tick();
 	reel3.tick();
-	// reelWatcher();
 
 	// vfd.print(millis() / 1000);
 	// vfd.println(" seconds");

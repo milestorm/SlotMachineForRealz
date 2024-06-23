@@ -81,7 +81,6 @@ void Reel::tick() {
         unsigned long currentMillis = millis();
         if (motorWasRunning && currentMillis - previousMillis >= motorStopTime) {
             previousMillis = currentMillis;  // Remember the time
-            Serial.print(motorWasRunning);
             stepper.stop();
             stepper.disableOutputs();
             motorWasRunning = false;
@@ -101,8 +100,8 @@ bool Reel::isRunning() {
 Gets the real index of a symbol, which is ocekavan in its array
 @param currentPos {long} Position of a stepper
 */
-int Reel::getSymbolsIndex(long currentPos) {
-    long currentPosition = ((currentPos - CALIBRATION_CONSTANT) % NUM_STEPS) / STEPS_PER_VALUE;
+int Reel::getSymbolsIndex(int currentPos) {
+    int currentPosition = ((currentPos - CALIBRATION_CONSTANT) % NUM_STEPS) / STEPS_PER_VALUE;
     return currentPosition;
 }
 
@@ -148,6 +147,37 @@ uint16_t* Reel::getSymbolsAfterSpin(uint16_t targetValue) {
     }
 
     return symbArray;
+}
+
+uint16_t Reel::calculateTargetValue(int targetPos) {
+    int currentIndex = getSymbolsIndex(stepper.currentPosition());
+    int stepsToMove = (targetPos - currentIndex + reelSymbolsLength) % reelSymbolsLength;
+    return stepsToMove * STEPS_PER_VALUE;
+}
+
+int Reel::getFutureSymbolsIndex(uint16_t targetValue) {
+    int currentIndex = getSymbolsIndex(stepper.currentPosition() + (targetValue * STEPS_PER_VALUE));
+    return currentIndex;
+}
+
+// Function to find the next index containing the winning symbol
+int Reel::findSymbolIndex(int winningSymbol, uint16_t targetMotorValueReel) {
+    int currentIndex = getFutureSymbolsIndex(targetMotorValueReel);
+    for (int i = 0; i < reelSymbolsLength; i++) {
+        int newIndex = (currentIndex + i) % reelSymbolsLength;
+        if (reelSymbols[newIndex] == winningSymbol) {
+            return newIndex;
+        }
+    }
+    return currentIndex; // If no other index is found, return the current index
+}
+
+int Reel::calculateAdditionalStepsForSymbol(int winningSymbol, uint16_t targetMotorValueReel) {
+    int currentIndex = getFutureSymbolsIndex(targetMotorValueReel);
+    int nextIndex = findSymbolIndex(winningSymbol, targetMotorValueReel) + 1; // TODO tady mozna udelat random mezi -1, 0 a 1. aby tot bylo vic modularni kde ti to da ten viteznej srac
+    int additionalSteps = (nextIndex - currentIndex - reelSymbolsLength) % reelSymbolsLength;
+
+    return additionalSteps;
 }
 
 /*

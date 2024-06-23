@@ -28,10 +28,14 @@ class Reel {
         bool isRunning();
         uint16_t* getSymbolsAfterSpin(uint16_t targetValue);
         void setLights(int *bulbArray);
+        uint16_t calculateTargetValue(int targetPos);
+        int findSymbolIndex(int winningSymbol, uint16_t targetMotorValueReel);
+        int getFutureSymbolsIndex(uint16_t targetValue);
+        int calculateAdditionalStepsForSymbol(int winningSymbol, uint16_t targetMotorValueReel);
 
     private:
         void calibrateReel();
-        int getSymbolsIndex(long currentPos);
+        int getSymbolsIndex(int currentPos);
         uint16_t* getReelWinSymbols(long currentIndex);
         void spinningLightEffect();
 
