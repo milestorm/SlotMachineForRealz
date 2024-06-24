@@ -2,12 +2,13 @@
 
 - [x] Classa reels
     - [x] kdyz se tocej reels, tak svetla budou delat efekt waterfall. [1, 0, 0], [0, 1, 0], [0, 0, 1]. Moznost je mit vypnuty
-    - [ ] kdyz se ze zastavej, tak budou svitit vsechny. Pak jak se budou vyhodnocovat vyherni, tak ty budou blikat. TOHLE ASI UDELAT V SLOTMACHINE CLASS...
+    - [x] kdyz se ze zastavej, tak budou svitit vsechny. Pak jak se budou vyhodnocovat vyherni, tak ty budou blikat. TOHLE ASI UDELAT V SLOTMACHINE CLASS...
 
 - [ ] Classa pro SlotMachine samotnej.
-    - [ ] musi umet ZATIM NAHODNE roztocit valce
-    - [ ] pocitat vyhru podle vyhernich tabulek (viz obrazek Wings)
-    - [ ] spravne vyhodnotit vyherni linie - kdyz je jich vic, tak od prvniho postupne s blikanim a hranim nakyho tonu zvyraznit, ze byly vyhrany
+    - [x] musi umet ZATIM NAHODNE roztocit valce
+    - [x] pocitat vyhru podle vyhernich tabulek (viz obrazek Wings)
+    - [x] spravne vyhodnotit vyherni linie - kdyz je jich vic, tak od prvniho postupne s blikanim
+        - [ ] hranim nakyho tonu zvyraznit, ze byly vyhrany
     - [ ] po kazdy linii do levy casti displeje pricitat castku, co vyhral, aby to bylo postupny
     - [ ] az se vsechny linie vyhodnoti, tak mit mouznost riskovat 2x vyhru nebo nic. [60     RISK    0] blika mezi 60 a 0, mackas risk "start"em. kdyz uz mas dost, tak stisknes "do multiwinu".
     - [ ] poresit BET, aby mohl tocit tzv. 5+15 -> 5 ze spoda a 15 z multiwinu
@@ -25,4 +26,5 @@
 - [ ] Classa pro ovladani ciselnych LED panelu
     - [ ] efekt na pricitani/odecitani cisel. Jakoze vyhrajes 100, tak z 50 ti to po jednotkach rychle napocita do 150.
 
-- [ ] Udelat lepsi tocici algoritmus, kterej by zohlednoval ovlivnovani nahody ve prospech kasina v urcitym procentu.
+- [x] Udelat lepsi tocici algoritmus, kterej by zohlednoval ovlivnovani nahody ve prospech kasina v urcitym procentu.
+- tocici algoritmus upravit, aby byl chytrejsi...
