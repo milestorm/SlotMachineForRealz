@@ -63,8 +63,8 @@ OneButton startButton(BUTT_START, true);
 // DISPLAY DEFINITIONS
 // ---------------------------------
 
-// Samsung_16LF01_VFD vfdisplay(VFD_SCLK_PIN, VFD_DATA_PIN, VFD_RST_PIN);
-// Vfdcontrol vfd(vfdisplay);
+Samsung_16LF01_VFD vfdisplay(VFD_SCLK_PIN, VFD_DATA_PIN, VFD_RST_PIN);
+Vfdcontrol vfd(vfdisplay);
 
 
 // HELPERS
@@ -379,7 +379,7 @@ void setup() {
 
 	Entropy.initialize();
 
-	// vfd.init();
+	vfd.init();
 
 	reel1.init();
 	reel2.init();
@@ -396,22 +396,12 @@ void setup() {
 void loop() {
 	startButton.tick();
 
-	// vfd.tick();
 
 	reel1.tick();
 	reel2.tick();
 	reel3.tick();
 
-    // reel1_light1.tick();
-    // reel1_light2.tick();
-    // reel1_light3.tick();
-    // reel2_light1.tick();
-    // reel2_light2.tick();
-    // reel2_light3.tick();
-    // reel3_light1.tick();
-    // reel3_light2.tick();
-    // reel3_light3.tick();
-
+	vfd.update();
 	// vfd.print(millis() / 1000);
 	// vfd.println(" seconds");
 	// delay(1000);
