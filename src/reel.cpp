@@ -1,4 +1,5 @@
 #include "reel.h"
+#include "Entropy.h"
 
 /*
 Class initialization with motor, calibration sensor and light bulbs
@@ -143,14 +144,14 @@ Kind of hindsight of symbols which will be on reels after the spin
 uint16_t* Reel::getSymbolsAfterSpin(uint16_t targetValue) {
     uint16_t *symbArray = getReelWinSymbols(getSymbolsIndex(stepper.currentPosition() + (targetValue * STEPS_PER_VALUE)) );
 
-    if (DEBUG) {
-        Serial.print("Symbols will be: ");
-        Serial.print(symbArray[0]);
-        Serial.print(", ");
-        Serial.print(symbArray[1]);
-        Serial.print(", ");
-        Serial.println(symbArray[2]);
-    }
+    // if (DEBUG) {
+    //     Serial.print("Symbols will be: ");
+    //     Serial.print(symbArray[0]);
+    //     Serial.print(", ");
+    //     Serial.print(symbArray[1]);
+    //     Serial.print(", ");
+    //     Serial.println(symbArray[2]);
+    // }
 
     return symbArray;
 }
@@ -178,9 +179,9 @@ int Reel::findSymbolIndex(int winningSymbol, uint16_t targetMotorValueReel) {
     return currentIndex; // If no other index is found, return the current index
 }
 
-int Reel::calculateAdditionalStepsForSymbol(int winningSymbol, uint16_t targetMotorValueReel) {
+int Reel::calculateAdditionalStepsForSymbol(int winningSymbol, int rndNumOfLine, uint16_t targetMotorValueReel) {
     int currentIndex = getFutureSymbolsIndex(targetMotorValueReel);
-    int nextIndex = findSymbolIndex(winningSymbol, targetMotorValueReel) + 1; // TODO tady mozna udelat random mezi -1, 0 a 1. aby tot bylo vic modularni kde ti to da ten viteznej srac
+    int nextIndex = findSymbolIndex(winningSymbol, targetMotorValueReel) + rndNumOfLine; // TODO tady mozna udelat random mezi -1, 0 a 1. aby tot bylo vic modularni kde ti to da ten viteznej srac
     int additionalSteps = (nextIndex - currentIndex - reelSymbolsLength) % reelSymbolsLength;
 
     return additionalSteps;
@@ -193,11 +194,11 @@ Physically spin the reel
 void Reel::spin(int targetValue) {
     stepper.move(targetValue * STEPS_PER_VALUE);
 
-    if (DEBUG) {
-        Serial.print(reelIndex);
-        Serial.print(". reel is going to: ");
-        Serial.println(targetValue);
-    }
+    // if (DEBUG) {
+    //     Serial.print(reelIndex);
+    //     Serial.print(". reel is going to: ");
+    //     Serial.println(targetValue);
+    // }
 
 }
 

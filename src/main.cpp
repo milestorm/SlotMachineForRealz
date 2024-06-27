@@ -279,7 +279,7 @@ void adjustReelsForWin(uint16_t& targetMotorValueReel1, uint16_t& targetMotorVal
 
     int winningSymbol;
     // Define a baseline for when we decide to force a loss
-    float lossThreshold = 0.1; // 10% chance to force a loss
+    float lossThreshold = 0.5; // 50% chance to force a loss
 
     // Increase loss probability if the player has high credits
     if (balance + multiwinBalance > 500) {
@@ -289,8 +289,17 @@ void adjustReelsForWin(uint16_t& targetMotorValueReel1, uint16_t& targetMotorVal
     // Generate a random value to decide whether to force a loss
     float lossProbability = Entropy.random(0, 100) / 100.0;
 
+    Serial.print("adjustmentFactor: ");
+    Serial.println(adjustmentFactor);
+    Serial.print("lossProbability: ");
+    Serial.println(lossProbability);
+    Serial.print("lossThreshold: ");
+    Serial.println(lossThreshold);
+
     if (lossProbability < lossThreshold) {
-        winningSymbol = Entropy.random(0, 2); // Force a low payout symbol
+        Serial.println("* Reels NOT adjusted *");
+        return; // lose, so do not adjust a thang
+        // winningSymbol = Entropy.random(0, 2); // Force a low payout symbol
     } else {
         if (adjustmentFactor > 0.5) {
             winningSymbol = Entropy.random(6, 8); // High payout symbol (6, 7, 8)
@@ -301,13 +310,18 @@ void adjustReelsForWin(uint16_t& targetMotorValueReel1, uint16_t& targetMotorVal
         }
     }
 
+    // Random line to start the symbol with
+    int rndNumOfLine = Entropy.random(2) - 1;
+    Serial.print("rndNumOfLine: ");
+    Serial.println(rndNumOfLine);
+
 	Serial.print("Winning Symbol: ");
 	Serial.println(winningSymbol);
 
     // Calculate the additional steps needed for each reel
-    int additionalSteps1 = reel1.calculateAdditionalStepsForSymbol(winningSymbol, targetMotorValueReel1);
-    int additionalSteps2 = reel2.calculateAdditionalStepsForSymbol(winningSymbol, targetMotorValueReel2);
-    int additionalSteps3 = reel3.calculateAdditionalStepsForSymbol(winningSymbol, targetMotorValueReel3);
+    int additionalSteps1 = reel1.calculateAdditionalStepsForSymbol(winningSymbol, rndNumOfLine, targetMotorValueReel1);
+    int additionalSteps2 = reel2.calculateAdditionalStepsForSymbol(winningSymbol, rndNumOfLine, targetMotorValueReel2);
+    int additionalSteps3 = reel3.calculateAdditionalStepsForSymbol(winningSymbol, rndNumOfLine, targetMotorValueReel3);
 
     // Adjust the target motor values
     targetMotorValueReel1 += additionalSteps1;
@@ -336,9 +350,9 @@ void startButtonFn() {
     vfd.clear();
     vfd.printNumberTo(balance, 2);
 
-	targetMotorValueReel1 = Entropy.random(96, 160);
-	targetMotorValueReel2 = Entropy.random(2, 72);
-	targetMotorValueReel3 = Entropy.random(2, 48);
+	targetMotorValueReel1 = Entropy.random(96, 140);
+	targetMotorValueReel2 = Entropy.random(10, 72);
+	targetMotorValueReel3 = Entropy.random(8, 48);
 
 	targetMotorValueReel2 = targetMotorValueReel1 + targetMotorValueReel2;
 	targetMotorValueReel3 = targetMotorValueReel2 + targetMotorValueReel3;
@@ -394,12 +408,21 @@ void startButtonFn() {
     // Display results
     Serial.print("Balance: ");
     Serial.println(balance);
+    Serial.print("Multiwin Balance: ");
+    Serial.println(multiwinBalance);
     Serial.print("Winnings: ");
     Serial.println(winnings);
     float newRTP = (totalPaidOut * 100.0) / totalWagered;
     Serial.print("RTP: ");
     Serial.print(newRTP, 2);
     Serial.println("%");
+
+    Serial.print("totalWagered: ");
+    Serial.println(totalWagered);
+    Serial.print("totalPaidOut: ");
+    Serial.println(totalPaidOut);
+
+    Serial.println("__________________");
 
     spinCounter++;
     if (spinCounter >= 10) {
