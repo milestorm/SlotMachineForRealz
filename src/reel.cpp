@@ -89,6 +89,12 @@ void Reel::tick() {
     // stepper.run();
 }
 
+void Reel::stopMotor() {
+    stepper.stop();
+    stepper.disableOutputs();
+    motorWasRunning = false;
+}
+
 /*
 Checks to see if the motor is currently running to a target
 */

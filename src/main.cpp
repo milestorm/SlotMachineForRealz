@@ -10,6 +10,9 @@
 #include "vfdcontrol.h"
 #include "tools.h"
 
+// Scope definitions
+void reelAndVfdLoop();
+
 // REELS DEFINITIONS
 // ---------------------------------
 
@@ -83,14 +86,14 @@ int spinCounter = 0;
 const int numSlots = 10; // Number of slots for wear EEPROM leveling
 
 // Balances and wagers
-int balance = 1000;
-int standardBet = 5;
-int multiwinBet = 5;
+int balance = 200; // current money inserted
+int multiwinBalance = 500; // current money won and sent to multiwin
+int standardBet = 5; // bet, which decrement each spin from "balance"
+int multiwinBet = 10; // bet, which decrement each spin from "multiwinBalance"
 
-// totaly ukladat do eepromky kazdejch 10 otoceni, aby byla historie.
-long totalWagered = 0;
-long totalPaidOut = 0;
-float targetRTP = 95.0;
+long totalWagered = 0; // total historical wagered amount (standard + multiwin)
+long totalPaidOut = 0; // total historical won amount
+float targetRTP = 95.0; // target long-term return to player
 
 uint8_t calculateChecksum(long totalWagered, long totalPaidOut) {
     uint8_t checksum = 0;
@@ -181,33 +184,73 @@ void flashLEDs(int times, int delayTime, Flasher& led1, Flasher& led2, Flasher& 
     }
 }
 
+bool isWinner(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3) {
+    if (symbols1[0] == symbols2[0] && symbols2[0] == symbols3[0]) {
+        return true;
+    }
+    if (symbols1[1] == symbols2[1] && symbols2[1] == symbols3[1]) {
+        return true;
+    }
+    if (symbols1[2] == symbols2[2] && symbols2[2] == symbols3[2]) {
+        return true;
+    }
+    if (symbols1[0] == symbols2[1] && symbols2[1] == symbols3[2]) {
+        return true;
+    }
+    if (symbols1[2] == symbols2[1] && symbols2[1] == symbols3[0]) {
+        return true;
+    }
+    return false;
+}
+
 int calculateWinnings(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3, int standardBet, int multiwinBet) {
     int payout = 0;
+    int winnings = 0;
 
     // Check horizontal lines
     if (symbols1[0] == symbols2[0] && symbols2[0] == symbols3[0]) {
+        Serial.println("WINNER - row 1");
         flashLEDs(6, 100, reel1.bulb1, reel2.bulb1, reel3.bulb1);
-        payout += calculateWinAmount(symbols1[0], standardBet, multiwinBet);
+        winnings = calculateWinAmount(symbols1[0], standardBet, multiwinBet);
+        vfd.counterStart(payout, payout + winnings, 20, 0);
+        while (vfd.isCounting()) {reelAndVfdLoop();}
+        payout += winnings;
     }
     if (symbols1[1] == symbols2[1] && symbols2[1] == symbols3[1]) {
+        Serial.println("WINNER - row 2");
         flashLEDs(6, 100, reel1.bulb2, reel2.bulb2, reel3.bulb2);
-        payout += calculateWinAmount(symbols1[1], standardBet, multiwinBet);
+        winnings = calculateWinAmount(symbols1[1], standardBet, multiwinBet);
+        vfd.counterStart(payout, payout + winnings, 20, 0);
+        while (vfd.isCounting()) {reelAndVfdLoop();}
+        payout += winnings;
     }
     if (symbols1[2] == symbols2[2] && symbols2[2] == symbols3[2]) {
+        Serial.println("WINNER - row 3");
         flashLEDs(6, 100, reel1.bulb3, reel2.bulb3, reel3.bulb3);
-        payout += calculateWinAmount(symbols1[2], standardBet, multiwinBet);
+        winnings = calculateWinAmount(symbols1[2], standardBet, multiwinBet);
+        vfd.counterStart(payout, payout + winnings, 20, 0);
+        while (vfd.isCounting()) {reelAndVfdLoop();}
+        payout += winnings;
     }
 
     // Check diagonal lines
     // upper-left to bottom-right
     if (symbols1[0] == symbols2[1] && symbols2[1] == symbols3[2]) {
+        Serial.println("WINNER - diagonal 1");
         flashLEDs(6, 100, reel1.bulb1, reel2.bulb2, reel3.bulb3);
-        payout += calculateWinAmount(symbols1[0], standardBet, multiwinBet);
+        winnings = calculateWinAmount(symbols1[0], standardBet, multiwinBet);
+        vfd.counterStart(payout, payout + winnings, 20, 0);
+        while (vfd.isCounting()) {reelAndVfdLoop();}
+        payout += winnings;
     }
     // bottom-left to upper-right
     if (symbols1[2] == symbols2[1] && symbols2[1] == symbols3[0]) {
+        Serial.println("WINNER - diagonal 2");
         flashLEDs(6, 100, reel1.bulb3, reel2.bulb2, reel3.bulb1);
-        payout += calculateWinAmount(symbols1[2], standardBet, multiwinBet);
+        winnings = calculateWinAmount(symbols1[2], standardBet, multiwinBet);
+        vfd.counterStart(payout, payout + winnings, 20, 0);
+        while (vfd.isCounting()) {reelAndVfdLoop();}
+        payout += winnings;
     }
 
     allLEDsOn();
@@ -235,13 +278,29 @@ void adjustReelsForWin(uint16_t& targetMotorValueReel1, uint16_t& targetMotorVal
     float adjustmentFactor = (targetRTP - currentRTP) / targetRTP;
 
     int winningSymbol;
-    if (adjustmentFactor > 0.5) {
-        winningSymbol = Entropy.random(6, 8); // High payout symbol (6, 7, 8)
-    } else if (adjustmentFactor > 0.2) {
-        winningSymbol = Entropy.random(3, 5); // Moderate payout symbol (3, 4, 5)
-    } else {
-        winningSymbol = Entropy.random(0, 2); // Low payout symbol (0, 1, 2)
+    // Define a baseline for when we decide to force a loss
+    float lossThreshold = 0.1; // 10% chance to force a loss
+
+    // Increase loss probability if the player has high credits
+    if (balance + multiwinBalance > 500) {
+        lossThreshold += 0.2; // Increase to 30% if credits are high
     }
+
+    // Generate a random value to decide whether to force a loss
+    float lossProbability = Entropy.random(0, 100) / 100.0;
+
+    if (lossProbability < lossThreshold) {
+        winningSymbol = Entropy.random(0, 2); // Force a low payout symbol
+    } else {
+        if (adjustmentFactor > 0.5) {
+            winningSymbol = Entropy.random(6, 8); // High payout symbol (6, 7, 8)
+        } else if (adjustmentFactor > 0.2) {
+            winningSymbol = Entropy.random(3, 5); // Moderate payout symbol (3, 4, 5)
+        } else {
+            winningSymbol = Entropy.random(0, 2); // Low payout symbol (0, 1, 2)
+        }
+    }
+
 	Serial.print("Winning Symbol: ");
 	Serial.println(winningSymbol);
 
@@ -269,8 +328,13 @@ void startButtonFn() {
         return;
     }
 
-	balance -= currentWager;
+	balance -= standardBet;
+    multiwinBalance -= multiwinBet;
+
     totalWagered += currentWager;
+
+    vfd.clear();
+    vfd.printNumberTo(balance, 2);
 
 	targetMotorValueReel1 = Entropy.random(96, 160);
 	targetMotorValueReel2 = Entropy.random(2, 72);
@@ -323,6 +387,7 @@ void startButtonFn() {
 
 	// Calculate and pay out winnings
     int winnings = calculateWinnings(futureSymbols1, futureSymbols2, futureSymbols3, standardBet, multiwinBet);
+    // TODO pocitat s multiwinem
     balance += winnings;
     totalPaidOut += winnings;
 
@@ -391,17 +456,24 @@ void setup() {
 		Serial.begin(9600);
 		Serial.println("Fruit Machine is ready.");
 	}
+
+    vfd.clear();
+    vfd.printNumberTo(balance, 2);
+}
+
+void reelAndVfdLoop() {
+    reel1.tick();
+	reel2.tick();
+	reel3.tick();
+
+	vfd.update();
 }
 
 void loop() {
 	startButton.tick();
 
+    reelAndVfdLoop();
 
-	reel1.tick();
-	reel2.tick();
-	reel3.tick();
-
-	vfd.update();
 	// vfd.print(millis() / 1000);
 	// vfd.println(" seconds");
 	// delay(1000);

@@ -7,9 +7,9 @@
 #define ADC_SEED_PIN A0
 
 //VFD display Pin config
-#define VFD_SCLK_PIN 10
-#define VFD_RST_PIN  12
-#define VFD_DATA_PIN 14
+#define VFD_SCLK_PIN 42 // 10
+#define VFD_RST_PIN  44 // 12
+#define VFD_DATA_PIN 46 // 14
 
 // REEL 1
 #define REEL_1__MOTOR_A 3

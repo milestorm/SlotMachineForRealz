@@ -10,6 +10,11 @@ Vfdcontrol::Vfdcontrol(Samsung_16LF01_VFD &vfdisplay) {
 void Vfdcontrol::init() {
     // Init the display, 16 digits and 20/31 of brightness
     vfdisplay.begin(16, 20);
+    vfdisplay.setBrightness(31);
+    vfdisplay.clear();
+}
+
+void Vfdcontrol::clear() {
     vfdisplay.clear();
 }
 
@@ -38,6 +43,26 @@ void Vfdcontrol::printToRight(const char* text) {
     vfdisplay.print(text);
 }
 
+void Vfdcontrol::printNumberTo(int number, int position) {
+    char buffer[17]; // Buffer to hold the number as a string with null terminator
+    itoa(number, buffer, 10); // Convert int to string
+
+    switch (position) {
+    case 0:
+        printToLeft(buffer);
+        break;
+    case 1:
+        printToCenter(buffer);
+        break;
+    case 2:
+        printToRight(buffer);
+        break;
+
+    default:
+        break;
+    }
+}
+
 void Vfdcontrol::counterStart(int startValue, int endValue, int delayMillis, int counterPrintPos) {
     currentValue = startValue;
     targetValue = endValue;
@@ -64,23 +89,7 @@ void Vfdcontrol::update() {
     if (currentMillis - previousMillis >= delayTime) {
         previousMillis = currentMillis;
 
-        char buffer[17]; // Buffer to hold the number as a string with null terminator
-        itoa(getCurrentValue(), buffer, 10); // Convert int to string
-
-        switch (counterPrintPosition) {
-        case 0:
-            printToLeft(buffer);
-            break;
-        case 1:
-            printToCenter(buffer);
-            break;
-        case 2:
-            printToRight(buffer);
-            break;
-
-        default:
-            break;
-        }
+        printNumberTo(getCurrentValue(), counterPrintPosition);
 
         if (currentValue != targetValue) {
             currentValue += increment;

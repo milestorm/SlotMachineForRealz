@@ -16,11 +16,13 @@ class Vfdcontrol {
         Vfdcontrol() {};
         void init();
         void update();
+        void clear();
         void printToLeft(const char* text);
         void printToCenter(const char* text);
         void printToRight(const char* text);
         void counterStart(int startValue, int endValue, int delayMillis, int counterPrintPosition);
         bool isCounting();
+        void printNumberTo(int number, int position);
 
     private:
         Samsung_16LF01_VFD vfdisplay;
