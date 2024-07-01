@@ -9,7 +9,7 @@
     - [x] pocitat vyhru podle vyhernich tabulek (viz obrazek Wings)
     - [x] spravne vyhodnotit vyherni linie - kdyz je jich vic, tak od prvniho postupne s blikanim
         - [ ] hranim nakyho tonu zvyraznit, ze byly vyhrany
-    - [ ] po kazdy linii do levy casti displeje pricitat castku, co vyhral, aby to bylo postupny
+    - [x] po kazdy linii do levy casti displeje pricitat castku, co vyhral, aby to bylo postupny
     - [ ] az se vsechny linie vyhodnoti, tak mit mouznost riskovat 2x vyhru nebo nic. [60     RISK    0] blika mezi 60 a 0, mackas risk "start"em. kdyz uz mas dost, tak stisknes "do multiwinu".
     - [ ] poresit BET, aby mohl tocit tzv. 5+15 -> 5 ze spoda a 15 z multiwinu
     - [ ] vymyslet featuru na posouvani valcu jako takovou minihru
@@ -18,9 +18,9 @@
 - [ ] Mozna nakou classu na buttony, aby byla s nima prace jednodussi
 
 - [x] Classa pro ovladani VFD displeje
-    - [ ] moznost vypsat hodnotu do leva a zaroven do prava. popripade jen doleva a jen doprava
+    - [x] moznost vypsat hodnotu do leva a zaroven do prava. popripade jen doleva a jen doprava
     - [ ] scrollovani textu s moznosti nastaveni rychlosti
-    - [ ] efekt na pricitani/odecitani cisel. Jakoze vyhrajes 100, tak z 50 ti to po jednotkach rychle napocita do 150.
+    - [x] efekt na pricitani/odecitani cisel. Jakoze vyhrajes 100, tak z 50 ti to po jednotkach rychle napocita do 150.
 
 - [ ] Classa pro prehravani z MP3 player modulu. Musi byt dostatecne rychla
 - [ ] Classa pro ovladani ciselnych LED panelu

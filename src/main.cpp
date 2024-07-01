@@ -83,6 +83,8 @@ uint16_t* futureSymbols3;
 // bool textWritten = false;
 
 int spinCounter = 0;
+int spinCounterModeratePayoutLimit = 20; // Initialize the spin counter to 20 to moderate payout in adjust function
+int spinCounterModeratePayout = spinCounterModeratePayoutLimit;
 const int numSlots = 10; // Number of slots for wear EEPROM leveling
 
 // Balances and wagers
@@ -145,6 +147,36 @@ int calculateWinAmount(int symbol, int standardBet, int multiwinBet) {
     }
     return 0; // Default return if bets are not 2 or 5
 }
+
+/**
+ * Calculates winning amount to achieve bigger winnings with higher bets
+ * @param symbol {int} symbol Symbol number (0 lowest [cherry], 8 highest [star])
+ * @param standardBet {int} standard bet (2, 5)
+ * @param multiwinBet {int} bet from multiwin (0, 5, 10, 15 .. 95)
+ */
+// int calculateWinAmount(int symbol, int standardBet, int multiwinBet) {
+//     if (standardBet == 2) {
+//         return WIN_2_0[symbol];
+//     } else if (standardBet == 5) {
+//         if (multiwinBet == 0) {
+//             return WIN_5_0[symbol];
+//         } else {
+//             // Scale the payout based on the combined bet (standardBet + multiwinBet)
+//             int combinedBet = standardBet + multiwinBet;
+//             int basePayout = WIN_5_0[symbol];
+//             int maxPayout = WIN_5_5[symbol];
+
+//             // Calculate the scaling factor based on the original bet size (10) to the new combined bet size
+//             float scalingFactor = (float)combinedBet / 10.0;
+
+//             // Adjust the payout for the new combined bet
+//             int adjustedPayout = basePayout + (int)((maxPayout - basePayout) * scalingFactor);
+
+//             return adjustedPayout;
+//         }
+//     }
+//     return 0; // Default return if bets are not 2 or 5
+// }
 
 void allLEDsOff() {
     reel1.bulb1.off();
@@ -289,6 +321,9 @@ void adjustReelsForWin(uint16_t& targetMotorValueReel1, uint16_t& targetMotorVal
     // Generate a random value to decide whether to force a loss
     float lossProbability = Entropy.random(0, 100) / 100.0;
 
+    // Calculate the chance for a moderate payout based on the spin counter
+    float moderatePayoutChance = (spinCounterModeratePayoutLimit - spinCounterModeratePayout) / 100.0;
+
     Serial.print("adjustmentFactor: ");
     Serial.println(adjustmentFactor);
     Serial.print("lossProbability: ");
@@ -301,12 +336,22 @@ void adjustReelsForWin(uint16_t& targetMotorValueReel1, uint16_t& targetMotorVal
         return; // lose, so do not adjust a thang
         // winningSymbol = Entropy.random(0, 2); // Force a low payout symbol
     } else {
-        if (adjustmentFactor > 0.5) {
-            winningSymbol = Entropy.random(6, 8); // High payout symbol (6, 7, 8)
-        } else if (adjustmentFactor > 0.2) {
-            winningSymbol = Entropy.random(3, 5); // Moderate payout symbol (3, 4, 5)
+        float moderatePayoutProbability = Entropy.random(0, 100) / 100.0;
+        Serial.print("moderatePayoutProbability: ");
+        Serial.println(moderatePayoutProbability);
+
+        if (moderatePayoutProbability < moderatePayoutChance) {
+            Serial.println("! Giving MODERATE payout symbol !");
+            winningSymbol = Entropy.random(3, 6); // Moderate payout symbol (3, 4, 5, 6)
+            spinCounterModeratePayout = spinCounterModeratePayoutLimit;
         } else {
-            winningSymbol = Entropy.random(0, 2); // Low payout symbol (0, 1, 2)
+            if (adjustmentFactor > 0.5) {
+                winningSymbol = Entropy.random(6, 8); // High payout symbol (6, 7, 8)
+            } else if (adjustmentFactor > 0.2) {
+                winningSymbol = Entropy.random(3, 5); // Moderate payout symbol (3, 4, 5)
+            } else {
+                winningSymbol = Entropy.random(0, 2); // Low payout symbol (0, 1, 2)
+            }
         }
     }
 
@@ -348,7 +393,9 @@ void startButtonFn() {
     totalWagered += currentWager;
 
     vfd.clear();
-    vfd.printNumberTo(balance, 2);
+    // vfd.printNumberTo(balance, 2);
+    vfd.printNumberTo(balance, 1);
+    vfd.printNumberTo(multiwinBalance, 2);
 
 	targetMotorValueReel1 = Entropy.random(96, 140);
 	targetMotorValueReel2 = Entropy.random(10, 72);
@@ -402,7 +449,8 @@ void startButtonFn() {
 	// Calculate and pay out winnings
     int winnings = calculateWinnings(futureSymbols1, futureSymbols2, futureSymbols3, standardBet, multiwinBet);
     // TODO pocitat s multiwinem
-    balance += winnings;
+    // balance += winnings;
+    multiwinBalance += winnings;
     totalPaidOut += winnings;
 
     // Display results
@@ -431,6 +479,10 @@ void startButtonFn() {
         Serial.print("Saved to EEPROM slot ");
         Serial.println(slot);
         spinCounter = 0;
+    }
+
+    if (spinCounterModeratePayout > 0) {
+        spinCounterModeratePayout--;
     }
 }
 
@@ -481,7 +533,10 @@ void setup() {
 	}
 
     vfd.clear();
-    vfd.printNumberTo(balance, 2);
+    // vfd.printNumberTo(balance, 2);
+
+    vfd.printNumberTo(balance, 1);
+    vfd.printNumberTo(multiwinBalance, 2);
 }
 
 void reelAndVfdLoop() {
