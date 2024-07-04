@@ -282,9 +282,9 @@ void flashLEDs(int times, int delayTime, Flasher& led1, Flasher& led2, Flasher& 
     }
 }
 
-bool isWinner(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3, int standardBet, int multiwinBet) {
-    bool secondReelWildcard = (standardBet == 5 && multiwinBet >= 45 && multiwinBet < 95);
-    bool allReelsWildcard = (standardBet == 5 && multiwinBet == 95);
+bool isWinner(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3, int multiwinBet) {
+    bool secondReelWildcard = (multiwinBet >= 45 && multiwinBet < 95);
+    bool allReelsWildcard = (multiwinBet == 95);
 
     auto isMatch = [&](uint16_t a, uint16_t b, uint16_t c) {
         if (allReelsWildcard) {
