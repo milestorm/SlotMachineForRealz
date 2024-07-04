@@ -18,9 +18,25 @@ void reelAndVfdLoop();
 
 // Define the constants for the win amounts for different symbols
 // Bell, Plum, Orange, Lemon and Cherry payout is the same even in higher multiwin bets
-const int WIN_2_0[] = {10, 10, 20, 20, 40, 60, 80, 100, 150};
-const int WIN_5_0[] = {25, 25, 50, 50, 100, 150, 200, 250, 375};
-const int WIN_5_5[] = {25, 25, 50, 50, 100, 200, 300, 400, 750};
+
+// WINGS payout table
+// const int WIN_2_0[] = {10, 10, 20, 20, 40, 60, 80, 100, 150};
+// const int WIN_5_0[] = {25, 25, 50, 50, 100, 150, 200, 250, 375};
+// const int WIN_5_5[] = {25, 25, 50, 50, 100, 200, 300, 400, 750};
+
+// CRISS CROSS payout table (my physical reels are from this machine)
+// const int WIN_2_0[] = {10, 10, 20,  20,  40,  80,  100, 150, 200};
+// const int WIN_5_0[] = {25, 25, 50,  50,  100, 200, 250, 375, 500};
+// const int WIN_5_5[] = {50, 50, 100, 100, 150, 200, 300, 400, 750};
+
+// EXTREME payout table
+const int WIN_2_0[] =  {10,  10,  20,  20,  30,  40,  60,  80,  200};
+const int WIN_5_0[] =  {25,  25,  50,  50,  75,  100, 150, 200, 500};
+const int WIN_5_5[] =  {50,  50,  100, 100, 150, 200, 300, 400, 750};
+const int WIN_5_15[] = {100, 100, 200, 200, 300, 500, 600, 750, 750};
+const int WIN_5_25[] = {150, 200, 300, 400, 500, 600, 750, 750, 750};
+const int WIN_5_45[] = {200, 300, 400, 500, 600, 750, 750, 750, 750}; // wild: -|*|-
+const int WIN_5_95[] = {750, 750, 750, 750, 750, 750, 750, 750, 750}; // wild: *|*|*
 
 //              0       1      2       3     4     5       6      7      8
 // enum Symbol {CHERRY, LEMON, ORANGE, PLUM, BELL, GRAPES, MELON, SEVEN, STAR};
@@ -83,7 +99,7 @@ uint16_t* futureSymbols3;
 // bool textWritten = false;
 
 int spinCounter = 0;
-int spinCounterModeratePayoutLimit = 20; // Initialize the spin counter to 20 to moderate payout in adjust function
+int spinCounterModeratePayoutLimit = 30; // Initialize the spin counter to 30 to moderate payout in adjust function
 int spinCounterModeratePayout = spinCounterModeratePayoutLimit;
 const int numSlots = 10; // Number of slots for wear EEPROM leveling
 
@@ -129,24 +145,74 @@ bool loadFromEEPROM(long &totalWagered, long &totalPaidOut, int slot) {
 }
 
 /**
- * Calculates winning amount
+ * Calculates winning amount for EXTREME machine
  * @param symbol {int} symbol Symbol number (0 lowest [cherry], 8 highest [star])
  * @param standardBet {int} standard bet (2, 5)
  * @param multiwinBet {int} bet from multiwin (0, 5, 10, 15 .. 95)
  */
 int calculateWinAmount(int symbol, int standardBet, int multiwinBet) {
+    const int MAX_WIN = 750;
+
     if (standardBet == 2) {
         return WIN_2_0[symbol];
     } else if (standardBet == 5) {
+        int winAmount = 0;
+
         if (multiwinBet == 0) {
-            return WIN_5_0[symbol];
+            winAmount = WIN_5_0[symbol];
+        } else if (multiwinBet == 5) {
+            winAmount = WIN_5_5[symbol];
+        } else if (multiwinBet == 15) {
+            winAmount = WIN_5_15[symbol];
+        } else if (multiwinBet == 25) {
+            winAmount = WIN_5_25[symbol];
+        } else if (multiwinBet == 45) {
+            winAmount = WIN_5_45[symbol];
+        } else if (multiwinBet == 95) {
+            winAmount = WIN_5_95[symbol];
         } else {
-            int increment = (WIN_5_5[symbol] - WIN_5_0[symbol]) / 5;
-            return WIN_5_0[symbol] + multiwinBet * increment;
+            // Calculate intermediate values
+            int increment;
+            if (multiwinBet < 15) {
+                increment = (WIN_5_15[symbol] - WIN_5_5[symbol]) / 10;
+                winAmount = WIN_5_5[symbol] + (multiwinBet - 5) * increment;
+            } else if (multiwinBet < 25) {
+                increment = (WIN_5_25[symbol] - WIN_5_15[symbol]) / 10;
+                winAmount = WIN_5_15[symbol] + (multiwinBet - 15) * increment;
+            } else if (multiwinBet < 45) {
+                increment = (WIN_5_45[symbol] - WIN_5_25[symbol]) / 20;
+                winAmount = WIN_5_25[symbol] + (multiwinBet - 25) * increment;
+            } else if (multiwinBet < 95) {
+                increment = (WIN_5_95[symbol] - WIN_5_45[symbol]) / 50;
+                winAmount = WIN_5_45[symbol] + (multiwinBet - 45) * increment;
+            }
         }
+
+        return min(winAmount, MAX_WIN);
     }
     return 0; // Default return if bets are not 2 or 5
 }
+
+
+/**
+ * Calculates winning amount for CRISSCROSS and WINGS machine
+ * @param symbol {int} symbol Symbol number (0 lowest [cherry], 8 highest [star])
+ * @param standardBet {int} standard bet (2, 5)
+ * @param multiwinBet {int} bet from multiwin (0, 5, 10, 15 .. 95)
+ */
+// int calculateWinAmount(int symbol, int standardBet, int multiwinBet) {
+//     if (standardBet == 2) {
+//         return WIN_2_0[symbol];
+//     } else if (standardBet == 5) {
+//         if (multiwinBet == 0) {
+//             return WIN_5_0[symbol];
+//         } else {
+//             int increment = (WIN_5_5[symbol] - WIN_5_0[symbol]) / 5;
+//             return WIN_5_0[symbol] + multiwinBet * increment;
+//         }
+//     }
+//     return 0; // Default return if bets are not 2 or 5
+// }
 
 /**
  * Calculates winning amount to achieve bigger winnings with higher bets
@@ -216,24 +282,38 @@ void flashLEDs(int times, int delayTime, Flasher& led1, Flasher& led2, Flasher& 
     }
 }
 
-bool isWinner(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3) {
-    if (symbols1[0] == symbols2[0] && symbols2[0] == symbols3[0]) {
+bool isWinner(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3, int standardBet, int multiwinBet) {
+    bool secondReelWildcard = (standardBet == 5 && multiwinBet >= 45 && multiwinBet < 95);
+    bool allReelsWildcard = (standardBet == 5 && multiwinBet == 95);
+
+    auto isMatch = [&](uint16_t a, uint16_t b, uint16_t c) {
+        if (allReelsWildcard) {
+            return (a == b && b == c) || (a == 8 || b == 8 || c == 8);
+        }
+        if (secondReelWildcard) {
+            return (a == b && b == c) || (b == 8 && (a == c));
+        }
+        return a == b && b == c;
+    };
+
+    if (isMatch(symbols1[0], symbols2[0], symbols3[0])) {
         return true;
     }
-    if (symbols1[1] == symbols2[1] && symbols2[1] == symbols3[1]) {
+    if (isMatch(symbols1[1], symbols2[1], symbols3[1])) {
         return true;
     }
-    if (symbols1[2] == symbols2[2] && symbols2[2] == symbols3[2]) {
+    if (isMatch(symbols1[2], symbols2[2], symbols3[2])) {
         return true;
     }
-    if (symbols1[0] == symbols2[1] && symbols2[1] == symbols3[2]) {
+    if (isMatch(symbols1[0], symbols2[1], symbols3[2])) {
         return true;
     }
-    if (symbols1[2] == symbols2[1] && symbols2[1] == symbols3[0]) {
+    if (isMatch(symbols1[2], symbols2[1], symbols3[0])) {
         return true;
     }
     return false;
 }
+
 
 int calculateWinnings(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3, int standardBet, int multiwinBet) {
     int payout = 0;
@@ -245,7 +325,9 @@ int calculateWinnings(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3
         flashLEDs(6, 100, reel1.bulb1, reel2.bulb1, reel3.bulb1);
         winnings = calculateWinAmount(symbols1[0], standardBet, multiwinBet);
         vfd.counterStart(payout, payout + winnings, 20, 0);
-        while (vfd.isCounting()) {reelAndVfdLoop();}
+        while (vfd.isCounting()) {
+            // reelAndVfdLoop();
+        }
         payout += winnings;
     }
     if (symbols1[1] == symbols2[1] && symbols2[1] == symbols3[1]) {
@@ -253,7 +335,9 @@ int calculateWinnings(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3
         flashLEDs(6, 100, reel1.bulb2, reel2.bulb2, reel3.bulb2);
         winnings = calculateWinAmount(symbols1[1], standardBet, multiwinBet);
         vfd.counterStart(payout, payout + winnings, 20, 0);
-        while (vfd.isCounting()) {reelAndVfdLoop();}
+        while (vfd.isCounting()) {
+            // reelAndVfdLoop();
+        }
         payout += winnings;
     }
     if (symbols1[2] == symbols2[2] && symbols2[2] == symbols3[2]) {
@@ -261,7 +345,9 @@ int calculateWinnings(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3
         flashLEDs(6, 100, reel1.bulb3, reel2.bulb3, reel3.bulb3);
         winnings = calculateWinAmount(symbols1[2], standardBet, multiwinBet);
         vfd.counterStart(payout, payout + winnings, 20, 0);
-        while (vfd.isCounting()) {reelAndVfdLoop();}
+        while (vfd.isCounting()) {
+            // reelAndVfdLoop();
+        }
         payout += winnings;
     }
 
@@ -272,7 +358,9 @@ int calculateWinnings(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3
         flashLEDs(6, 100, reel1.bulb1, reel2.bulb2, reel3.bulb3);
         winnings = calculateWinAmount(symbols1[0], standardBet, multiwinBet);
         vfd.counterStart(payout, payout + winnings, 20, 0);
-        while (vfd.isCounting()) {reelAndVfdLoop();}
+        while (vfd.isCounting()) {
+            // reelAndVfdLoop();
+        }
         payout += winnings;
     }
     // bottom-left to upper-right
@@ -281,7 +369,9 @@ int calculateWinnings(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3
         flashLEDs(6, 100, reel1.bulb3, reel2.bulb2, reel3.bulb1);
         winnings = calculateWinAmount(symbols1[2], standardBet, multiwinBet);
         vfd.counterStart(payout, payout + winnings, 20, 0);
-        while (vfd.isCounting()) {reelAndVfdLoop();}
+        while (vfd.isCounting()) {
+            // reelAndVfdLoop();
+        }
         payout += winnings;
     }
 
@@ -342,15 +432,15 @@ void adjustReelsForWin(uint16_t& targetMotorValueReel1, uint16_t& targetMotorVal
 
         if (moderatePayoutProbability < moderatePayoutChance) {
             Serial.println("! Giving MODERATE payout symbol !");
-            winningSymbol = Entropy.random(3, 6); // Moderate payout symbol (3, 4, 5, 6)
+            winningSymbol = Entropy.random(4, 6); // Moderate payout symbol (4, 5, 6)
             spinCounterModeratePayout = spinCounterModeratePayoutLimit;
         } else {
-            if (adjustmentFactor > 0.5) {
-                winningSymbol = Entropy.random(6, 8); // High payout symbol (6, 7, 8)
-            } else if (adjustmentFactor > 0.2) {
-                winningSymbol = Entropy.random(3, 5); // Moderate payout symbol (3, 4, 5)
+            if (adjustmentFactor > 0.15) {
+                winningSymbol = Entropy.random(7, 8); // High payout symbol (7, 8)
+            } else if (adjustmentFactor > 0.05) {
+                winningSymbol = Entropy.random(4, 6); // Moderate payout symbol (4, 5, 6)
             } else {
-                winningSymbol = Entropy.random(0, 2); // Low payout symbol (0, 1, 2)
+                winningSymbol = Entropy.random(0, 3); // Low payout symbol (0, 1, 2, 3)
             }
         }
     }
