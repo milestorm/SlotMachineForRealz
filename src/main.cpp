@@ -326,6 +326,7 @@ int calculateWinnings(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3
         winnings = calculateWinAmount(symbols1[0], standardBet, multiwinBet);
         vfd.counterStart(payout, payout + winnings, 20, 0);
         while (vfd.isCounting()) {
+			vfd.update();
             // reelAndVfdLoop();
         }
         payout += winnings;
@@ -336,6 +337,7 @@ int calculateWinnings(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3
         winnings = calculateWinAmount(symbols1[1], standardBet, multiwinBet);
         vfd.counterStart(payout, payout + winnings, 20, 0);
         while (vfd.isCounting()) {
+			vfd.update();
             // reelAndVfdLoop();
         }
         payout += winnings;
@@ -346,6 +348,7 @@ int calculateWinnings(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3
         winnings = calculateWinAmount(symbols1[2], standardBet, multiwinBet);
         vfd.counterStart(payout, payout + winnings, 20, 0);
         while (vfd.isCounting()) {
+			vfd.update();
             // reelAndVfdLoop();
         }
         payout += winnings;
@@ -359,6 +362,7 @@ int calculateWinnings(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3
         winnings = calculateWinAmount(symbols1[0], standardBet, multiwinBet);
         vfd.counterStart(payout, payout + winnings, 20, 0);
         while (vfd.isCounting()) {
+			vfd.update();
             // reelAndVfdLoop();
         }
         payout += winnings;
@@ -370,6 +374,7 @@ int calculateWinnings(uint16_t* symbols1, uint16_t* symbols2, uint16_t* symbols3
         winnings = calculateWinAmount(symbols1[2], standardBet, multiwinBet);
         vfd.counterStart(payout, payout + winnings, 20, 0);
         while (vfd.isCounting()) {
+			vfd.update();
             // reelAndVfdLoop();
         }
         payout += winnings;
