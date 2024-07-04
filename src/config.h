@@ -44,7 +44,8 @@
 // BUTTONS
 #define BUTT_START 11
 #define BUTT_BET 15
-#define BUTT_MAX_BET 32
-#define BUTT_AUTO_START 33
-#define BUTT_RISK 34
+// #define BUTT_MAX_BET 32
+// #define BUTT_AUTO_START 33
+// #define BUTT_RISK 34
+#define BUTT_TO_MULTIWIN 34
 #define BUTT_TAKE_FROM_MULTIWIN 35
